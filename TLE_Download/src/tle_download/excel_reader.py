@@ -1,64 +1,117 @@
 from __future__ import annotations
 
-from pathlib import Path
+import logging
+from typing import Iterable
 
 from openpyxl import load_workbook
 
-from .models import SatelliteRequest
+from .models import AppConfig, SatelliteRequest
 
 
-REQUIRED_HEADERS = ("SAT_Name", "NORAD ID")
-
-
-def read_satellite_requests(path: Path, sheet_name: str = "Sheet1") -> list[SatelliteRequest]:
-    if not path.exists():
-        raise FileNotFoundError(f"Missing input file: {path}")
-
-    workbook = load_workbook(path, read_only=True, data_only=True)
+def read_satellite_requests(
+    config: AppConfig,
+    logger: logging.Logger,
+) -> list[SatelliteRequest]:
+    workbook = load_workbook(
+        filename=config.input_excel_path,
+        read_only=True,
+        data_only=True,
+    )
     try:
-        if sheet_name not in workbook.sheetnames:
-            raise ValueError(f"Missing sheet '{sheet_name}' in {path.name}.")
+        if config.sheet_name not in workbook.sheetnames:
+            raise ValueError(
+                f"Sheet '{config.sheet_name}' was not found in {config.input_excel_path.name}."
+            )
 
-        sheet = workbook[sheet_name]
-        header_row = next(sheet.iter_rows(min_row=1, max_row=1, values_only=True), None)
-        if not header_row:
-            raise ValueError(f"{path.name} has no header row.")
+        worksheet = workbook[config.sheet_name]
+        header_row = next(
+            worksheet.iter_rows(min_row=1, max_row=1, values_only=True),
+            None,
+        )
+        if header_row is None:
+            raise ValueError("The worksheet does not contain a header row.")
 
-        header_map = _build_header_map(header_row)
-        missing = [header for header in REQUIRED_HEADERS if header not in header_map]
-        if missing:
-            raise ValueError(f"{path.name} is missing required headers: {', '.join(missing)}")
+        header_map = {
+            _normalize_header_name(value): index
+            for index, value in enumerate(header_row)
+        }
+        required_headers = [config.sat_name_header, config.norad_id_header]
+        missing_headers = [
+            header
+            for header in required_headers
+            if _normalize_header_name(header) not in header_map
+        ]
+        if missing_headers:
+            raise ValueError(
+                "Missing required headers: " + ", ".join(missing_headers)
+            )
+
+        sat_name_index = header_map[_normalize_header_name(config.sat_name_header)]
+        norad_id_index = header_map[_normalize_header_name(config.norad_id_header)]
 
         requests: list[SatelliteRequest] = []
-        for row_index, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-            sat_name = _cell_text(row, header_map["SAT_Name"])
-            norad_id = _cell_text(row, header_map["NORAD ID"])
+        for row_number, row_values in enumerate(
+            worksheet.iter_rows(min_row=2, values_only=True),
+            start=2,
+        ):
+            sat_name = _clean_text(_safe_get(row_values, sat_name_index))
+            norad_id = _normalize_norad_id(_safe_get(row_values, norad_id_index))
+
             if not sat_name and not norad_id:
                 continue
+
             if not sat_name or not norad_id:
+                logger.warning(
+                    "Skipping row %s because SAT_Name or NORAD ID is empty.",
+                    row_number,
+                )
                 continue
-            requests.append(SatelliteRequest(sat_name=sat_name, norad_id=norad_id))
+
+            requests.append(
+                SatelliteRequest(
+                    row_number=row_number,
+                    sat_name=sat_name,
+                    norad_id=norad_id,
+                )
+            )
 
         return requests
     finally:
         workbook.close()
 
 
-def _build_header_map(header_row: tuple[object, ...]) -> dict[str, int]:
-    result: dict[str, int] = {}
-    for index, value in enumerate(header_row):
-        if value is None:
-            continue
-        result[str(value).strip()] = index
-    return result
-
-
-def _cell_text(row: tuple[object, ...], index: int) -> str:
-    if index >= len(row):
+def _safe_get(values: Iterable[object], index: int) -> object:
+    values_list = list(values)
+    if index >= len(values_list):
         return ""
-    value = row[index]
+    return values_list[index]
+
+
+def _normalize_header_name(value: object) -> str:
+    return _clean_text(value)
+
+
+def _clean_text(value: object) -> str:
     if value is None:
         return ""
-    if isinstance(value, float) and value.is_integer():
-        return str(int(value))
-    return str(value).strip()
+    text = str(value).replace("\u00a0", " ").strip()
+    return text
+
+
+def _normalize_norad_id(value: object) -> str:
+    if value is None:
+        return ""
+
+    if isinstance(value, int):
+        return str(value)
+
+    if isinstance(value, float):
+        if value.is_integer():
+            return str(int(value))
+        return ""
+
+    text = _clean_text(value)
+    digits_only = text.replace(",", "")
+    if digits_only.isdigit():
+        return str(int(digits_only))
+    return ""

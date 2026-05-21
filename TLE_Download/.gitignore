@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+build/
+dist/
+*.spec
+logs/
+profile.xml
+/TLE_*.txt
+/TLE_Data.txt
+!/samples/
+!/samples/*.txt

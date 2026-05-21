@@ -1,58 +1,88 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import replace
 from pathlib import Path
-import xml.etree.ElementTree as ET
+from typing import Optional
+from xml.etree import ElementTree as ET
+
+from .models import AppConfig, SpaceTrackCredentials
+
+_PLACEHOLDER_VALUES = {
+    "",
+    "YOUR_SPACE_TRACK_ID",
+    "YOUR_SPACE_TRACK_PASSWORD",
+    "SPACE_TRACK_ID",
+    "SPACE_TRACK_PASSWORD",
+}
 
 
-@dataclass(frozen=True)
-class AppConfig:
-    space_track_id: str
-    space_track_pw: str
-    timeout_seconds: int
-    user_agent: str
+def build_default_config(project_root: Path) -> AppConfig:
+    return AppConfig(
+        project_root=project_root,
+        input_excel_path=project_root / "Sat_List.xlsx",
+        profile_path=project_root / "profile.xml",
+        log_dir=project_root / "logs",
+        sheet_name="Sheet1",
+        sat_name_header="SAT_Name",
+        norad_id_header="NORAD ID",
+        request_timeout_seconds=30,
+        user_agent="TLE_Download/1.0",
+    )
 
 
-def load_config(path: Path) -> AppConfig:
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Missing {path.name}. Copy profile.template.xml to profile.xml and fill credentials."
+def load_profile(
+    config: AppConfig,
+) -> tuple[AppConfig, Optional[SpaceTrackCredentials], Optional[str]]:
+    profile_path = config.profile_path
+    if not profile_path.exists():
+        return (
+            config,
+            None,
+            f"Profile file was not found: {profile_path}. "
+            "Space-Track credentials are unavailable; using CelesTrak only.",
         )
 
-    root = ET.parse(path).getroot()
+    tree = ET.parse(profile_path)
+    root = tree.getroot()
 
-    space_track = root.find("space_track")
-    request = root.find("request")
+    credentials = _parse_credentials(root)
+    credential_warning = None
+    if credentials is None:
+        credential_warning = (
+            "Space-Track account information is missing or still placeholder "
+            "values in profile.xml; using CelesTrak only."
+        )
 
-    space_track_id = _read_text(space_track, "ID")
-    space_track_pw = _read_text(space_track, "PW")
-    timeout_text = _read_text(request, "timeout_seconds", default="30")
-    user_agent = _read_text(
-        request,
-        "user_agent",
-        default="TLE_Download/1.0",
-    )
+    timeout_text = _clean_text(root.findtext("./Options/RequestTimeoutSeconds"))
+    user_agent = _clean_text(root.findtext("./Options/UserAgent")) or config.user_agent
 
-    try:
+    timeout_seconds = config.request_timeout_seconds
+    if timeout_text:
         timeout_seconds = int(timeout_text)
-    except ValueError as exc:
-        raise ValueError("request.timeout_seconds must be an integer.") from exc
 
-    if not space_track_id or not space_track_pw:
-        raise ValueError("profile.xml must contain non-empty space_track ID and PW values.")
-
-    return AppConfig(
-        space_track_id=space_track_id,
-        space_track_pw=space_track_pw,
-        timeout_seconds=timeout_seconds,
+    updated_config = replace(
+        config,
+        request_timeout_seconds=timeout_seconds,
         user_agent=user_agent,
     )
+    return updated_config, credentials, credential_warning
 
 
-def _read_text(parent: ET.Element | None, tag: str, default: str = "") -> str:
-    if parent is None:
-        return default
-    child = parent.find(tag)
-    if child is None or child.text is None:
-        return default
-    return child.text.strip()
+def _parse_credentials(root: ET.Element) -> Optional[SpaceTrackCredentials]:
+    identity = _clean_text(root.findtext("./SpaceTrack/ID"))
+    password = _clean_text(root.findtext("./SpaceTrack/PW"))
+
+    if _is_placeholder(identity) or _is_placeholder(password):
+        return None
+
+    return SpaceTrackCredentials(identity=identity, password=password)
+
+
+def _clean_text(value: Optional[str]) -> str:
+    if value is None:
+        return ""
+    return value.replace("\u00a0", " ").strip()
+
+
+def _is_placeholder(value: str) -> bool:
+    return value.strip() in _PLACEHOLDER_VALUES

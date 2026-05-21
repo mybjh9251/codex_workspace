@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<profile>
-  <space_track>
-    <ID>your-space-track-email@example.com</ID>
-    <PW>your-space-track-password</PW>
-  </space_track>
-  <request>
-    <timeout_seconds>30</timeout_seconds>
-    <user_agent>TLE_Download/1.0 (contact: your-email@example.com)</user_agent>
-  </request>
-</profile>
+<Profile>
+  <SpaceTrack>
+    <ID>YOUR_SPACE_TRACK_ID</ID>
+    <PW>YOUR_SPACE_TRACK_PASSWORD</PW>
+  </SpaceTrack>
+  <Options>
+    <RequestTimeoutSeconds>30</RequestTimeoutSeconds>
+    <UserAgent>TLE_Download/1.0</UserAgent>
+  </Options>
+</Profile>

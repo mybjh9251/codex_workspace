@@ -1,132 +1,193 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
-import re
+import json
+import logging
+from typing import Optional
 
 import requests
 
-from .config import AppConfig
-from .models import SatelliteRequest, TleRecord
+from .models import SpaceTrackCredentials, TleLines
 
-
-TLE_LINE1_RE = re.compile(r"^1\s+(\d{1,6})\S*")
-TLE_LINE2_RE = re.compile(r"^2\s+(\d{1,6})\s+")
+SPACE_TRACK_LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
+SPACE_TRACK_GP_QUERY_TEMPLATE = (
+    "https://www.space-track.org/basicspacedata/query/class/gp/"
+    "norad_cat_id/{norad_ids}/format/json"
+)
+CELESTRAK_GP_URL = "https://celestrak.org/NORAD/elements/gp.php"
 
 
 class SpaceTrackClient:
-    base_url = "https://www.space-track.org"
+    def __init__(
+        self,
+        credentials: SpaceTrackCredentials,
+        timeout_seconds: int,
+        user_agent: str,
+        logger: logging.Logger,
+    ) -> None:
+        self._credentials = credentials
+        self._timeout_seconds = timeout_seconds
+        self._logger = logger
+        self._session = requests.Session()
+        self._session.headers.update({"User-Agent": user_agent})
+        self._logged_in = False
 
-    def __init__(self, config: AppConfig):
-        self.config = config
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": config.user_agent})
-
-    def login(self) -> None:
-        response = self.session.post(
-            f"{self.base_url}/ajaxauth/login",
-            data={
-                "identity": self.config.space_track_id,
-                "password": self.config.space_track_pw,
-            },
-            timeout=self.config.timeout_seconds,
-        )
-        response.raise_for_status()
-
-    def fetch_latest_tles(self, norad_ids: Iterable[str]) -> dict[str, tuple[str, str]]:
-        ids = sorted({str(norad_id).strip() for norad_id in norad_ids if str(norad_id).strip()})
-        if not ids:
+    def fetch_many(self, norad_ids: list[str]) -> dict[str, TleLines]:
+        if not norad_ids:
             return {}
 
-        id_text = ",".join(ids)
-        url = (
-            f"{self.base_url}/basicspacedata/query/class/gp/"
-            f"NORAD_CAT_ID/{id_text}/orderby/NORAD_CAT_ID,EPOCH desc/format/tle"
+        self._login_if_needed()
+        query_url = SPACE_TRACK_GP_QUERY_TEMPLATE.format(
+            norad_ids=",".join(norad_ids)
         )
-        response = self.session.get(url, timeout=self.config.timeout_seconds)
+
+        response = self._session.get(query_url, timeout=self._timeout_seconds)
         response.raise_for_status()
-        return parse_tle_text_by_norad(response.text)
+
+        try:
+            payload = response.json()
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("Space-Track returned a non-JSON response.") from exc
+
+        if not isinstance(payload, list):
+            raise RuntimeError("Space-Track GP query did not return a JSON list.")
+
+        results: dict[str, TleLines] = {}
+        for item in payload:
+            norad_id = str(item.get("NORAD_CAT_ID", "")).strip()
+            line1 = str(item.get("TLE_LINE1", "")).strip()
+            line2 = str(item.get("TLE_LINE2", "")).strip()
+            if not norad_id or not line1 or not line2:
+                continue
+
+            results[norad_id] = TleLines(
+                line1=line1,
+                line2=line2,
+                source="Space-Track",
+            )
+
+        return results
+
+    def _login_if_needed(self) -> None:
+        if self._logged_in:
+            return
+
+        response = self._session.post(
+            SPACE_TRACK_LOGIN_URL,
+            data={
+                "identity": self._credentials.identity,
+                "password": self._credentials.password,
+            },
+            timeout=self._timeout_seconds,
+        )
+        if response.status_code != 200:
+            detail = _summarize_error_response(response)
+            raise RuntimeError(
+                f"Space-Track login failed with status {response.status_code}: {detail}"
+            )
+
+        self._logged_in = True
+        self._logger.info("Space-Track login succeeded.")
 
 
 class CelesTrakClient:
-    base_url = "https://celestrak.org/NORAD/elements/gp.php"
+    def __init__(
+        self,
+        timeout_seconds: int,
+        user_agent: str,
+    ) -> None:
+        self._timeout_seconds = timeout_seconds
+        self._session = requests.Session()
+        self._session.headers.update({"User-Agent": user_agent})
 
-    def __init__(self, config: AppConfig):
-        self.config = config
-        self.session = requests.Session()
-        self.session.headers.update({"User-Agent": config.user_agent})
-
-    def fetch_by_norad_id(self, norad_id: str) -> tuple[str, str] | None:
-        response = self.session.get(
-            self.base_url,
-            params={"CATNR": norad_id, "FORMAT": "TLE"},
-            timeout=self.config.timeout_seconds,
+    def fetch_one(self, norad_id: str) -> Optional[TleLines]:
+        response = self._session.get(
+            CELESTRAK_GP_URL,
+            params={
+                "CATNR": norad_id,
+                "FORMAT": "2LE",
+            },
+            timeout=self._timeout_seconds,
         )
-        response.raise_for_status()
-        records = parse_named_tle_text(response.text)
-        if not records:
+        if response.status_code == 404:
             return None
-        return records[0][1], records[0][2]
+        response.raise_for_status()
 
-    def fetch_by_exact_name(self, request: SatelliteRequest) -> tuple[str, str, str] | None:
-        response = self.session.get(
-            self.base_url,
-            params={"NAME": request.sat_name, "FORMAT": "TLE"},
-            timeout=self.config.timeout_seconds,
+        pair = _extract_tle_pair(response.text)
+        if pair is None:
+            return None
+
+        line1, line2 = pair
+        return TleLines(line1=line1, line2=line2, source="CelesTrak")
+
+    def resolve_norad_by_name(self, sat_name: str) -> Optional[str]:
+        response = self._session.get(
+            CELESTRAK_GP_URL,
+            params={
+                "NAME": sat_name,
+                "FORMAT": "JSON",
+            },
+            timeout=self._timeout_seconds,
         )
-        response.raise_for_status()
-        matches = [
-            record
-            for record in parse_named_tle_text(response.text)
-            if record[0].strip().casefold() == request.sat_name.strip().casefold()
-        ]
-        if len(matches) != 1:
+        if response.status_code == 404:
             return None
-        name, line1, line2 = matches[0]
-        norad_id = norad_from_tle_lines(line1, line2) or request.norad_id
-        return norad_id, line1, line2
+        response.raise_for_status()
+
+        payload = _parse_celestrak_json_payload(response)
+        if payload is None:
+            return None
+
+        requested_name = _normalize_name(sat_name)
+        exact_matches = []
+        for item in payload:
+            object_name = _normalize_name(item.get("OBJECT_NAME", ""))
+            norad_id = str(item.get("NORAD_CAT_ID", "")).strip()
+            if object_name != requested_name or not norad_id:
+                continue
+            exact_matches.append(norad_id)
+
+        unique_matches = sorted(set(exact_matches))
+        if len(unique_matches) != 1:
+            return None
+
+        return unique_matches[0]
 
 
-def parse_tle_text_by_norad(text: str) -> dict[str, tuple[str, str]]:
-    result: dict[str, tuple[str, str]] = {}
-    for _name, line1, line2 in parse_named_tle_text(text):
-        norad_id = norad_from_tle_lines(line1, line2)
-        if norad_id and norad_id not in result:
-            result[norad_id] = (line1, line2)
-    return result
-
-
-def parse_named_tle_text(text: str) -> list[tuple[str, str, str]]:
+def _extract_tle_pair(text: str) -> Optional[tuple[str, str]]:
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    records: list[tuple[str, str, str]] = []
-    i = 0
-    while i + 2 < len(lines):
-        if lines[i + 1].startswith("1 ") and lines[i + 2].startswith("2 "):
-            records.append((lines[i], lines[i + 1], lines[i + 2]))
-            i += 3
-        elif lines[i].startswith("1 ") and lines[i + 1].startswith("2 "):
-            norad_id = norad_from_tle_lines(lines[i], lines[i + 1]) or "UNKNOWN"
-            records.append((norad_id, lines[i], lines[i + 1]))
-            i += 2
-        else:
-            i += 1
-    return records
+    for index in range(len(lines) - 1):
+        line1 = lines[index]
+        line2 = lines[index + 1]
+        if line1.startswith("1 ") and line2.startswith("2 "):
+            return line1, line2
+    return None
 
 
-def norad_from_tle_lines(line1: str, line2: str) -> str | None:
-    match1 = TLE_LINE1_RE.match(line1)
-    match2 = TLE_LINE2_RE.match(line2)
-    if not match1 or not match2:
+def _summarize_error_response(response: requests.Response) -> str:
+    content_type = response.headers.get("Content-Type", "")
+    if "application/json" in content_type:
+        try:
+            return json.dumps(response.json(), ensure_ascii=False)
+        except json.JSONDecodeError:
+            pass
+    return response.text.strip()[:300]
+
+
+def _parse_celestrak_json_payload(
+    response: requests.Response,
+) -> Optional[list[dict[str, object]]]:
+    text = response.text.strip()
+    if not text or text == "No GP data found":
         return None
-    if match1.group(1) != match2.group(1):
-        return None
-    return match1.group(1)
+
+    try:
+        payload = response.json()
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("CelesTrak returned a non-JSON response.") from exc
+
+    if not isinstance(payload, list):
+        raise RuntimeError("CelesTrak NAME query did not return a JSON list.")
+    return payload
 
 
-def build_record(request: SatelliteRequest, line1: str, line2: str, source: str) -> TleRecord:
-    return TleRecord(
-        sat_name=request.sat_name,
-        norad_id=norad_from_tle_lines(line1, line2) or request.norad_id,
-        line1=line1,
-        line2=line2,
-        source=source,
-    )
+def _normalize_name(value: object) -> str:
+    return str(value).strip().casefold()
