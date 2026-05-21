@@ -19,9 +19,7 @@ secrets/
 profile.xml
 appsettings.*.local.json
 
-# Logs and runtime-generated data
-logs/
-*.log
+# Temporary local files
 *.tmp
 *.temp
 *.bak
@@ -107,7 +105,3 @@ sim/
 *.m~
 slprj/
 *.slxc
-
-# Project-specific generated outputs
-TLE_Data.txt
-*_Data.txt
