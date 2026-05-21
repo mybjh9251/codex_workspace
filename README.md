@@ -49,7 +49,7 @@ profile.template.xml
 
 | Path | Status |
 | --- | --- |
-| `TLE_Download/` | File contract and samples prepared; Python implementation pending |
+| `TLE_Download/` | Python implementation and file samples prepared; runtime verification pending |
 
 ## Related Documentation
 
