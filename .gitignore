@@ -1,0 +1,113 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.idea/
+
+# Secrets / local configuration
+.env
+.env.*
+!.env.example
+*.local
+*.secret
+secrets/
+profile.xml
+appsettings.*.local.json
+
+# Logs and runtime-generated data
+logs/
+*.log
+*.tmp
+*.temp
+*.bak
+*.cache
+
+# Common build outputs
+build/
+dist/
+out/
+target/
+release/
+debug/
+artifacts/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.python-version
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Python packaging
+*.egg-info/
+.eggs/
+wheels/
+
+# C# / .NET / WPF
+bin/
+obj/
+TestResults/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+packages/
+
+# C / C++
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+Testing/
+_deps/
+*.obj
+*.o
+*.pch
+*.pdb
+*.ilk
+*.lib
+*.dll
+*.so
+*.dylib
+*.a
+
+# Verilog / FPGA / simulation outputs
+*.vcd
+*.fst
+*.wlf
+*.jou
+*.str
+*.bit
+*.bin
+*.mcs
+*.rpt
+work/
+sim/
+
+# MATLAB
+*.asv
+*.m~
+slprj/
+*.slxc
+
+# Project-specific generated outputs
+TLE_Data.txt
+*_Data.txt
