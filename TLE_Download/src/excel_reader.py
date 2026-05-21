@@ -5,7 +5,7 @@ from typing import Iterable
 
 from openpyxl import load_workbook
 
-from .models import AppConfig, SatelliteRequest
+from models import AppConfig, SatelliteRequest
 
 
 def read_satellite_requests(

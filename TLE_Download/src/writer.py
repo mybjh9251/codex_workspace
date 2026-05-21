@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from pathlib import Path
 
-from .models import TleRecord
+from models import TleRecord
 
 
 def timestamped_output_path(project_root: Path, now: datetime | None = None) -> Path:

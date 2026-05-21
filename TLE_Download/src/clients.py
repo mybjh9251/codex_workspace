@@ -6,7 +6,7 @@ from typing import Optional
 
 import requests
 
-from .models import SpaceTrackCredentials, TleLines
+from models import SpaceTrackCredentials, TleLines
 
 SPACE_TRACK_LOGIN_URL = "https://www.space-track.org/ajaxauth/login"
 SPACE_TRACK_GP_QUERY_TEMPLATE = (

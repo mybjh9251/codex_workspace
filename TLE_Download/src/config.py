@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional
 from xml.etree import ElementTree as ET
 
-from .models import AppConfig, SpaceTrackCredentials
+from models import AppConfig, SpaceTrackCredentials
 
 _PLACEHOLDER_VALUES = {
     "",

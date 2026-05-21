@@ -9,7 +9,7 @@
 - `TLE_{YYMMDD_HHmmss}.txt`: 실행 시각 기준으로 생성되는 출력 파일
 - `logs/`: 일별 실행 로그
 - `main.py`: 실행 진입점
-- `src/tle_download/`: 구현 코드
+- `src/`: 구현 코드
 - `samples/`: Git에 보관하는 샘플 출력
 
 ## 권장 Python 설치

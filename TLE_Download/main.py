@@ -12,7 +12,7 @@ def bootstrap() -> int:
         if str(src_dir) not in sys.path:
             sys.path.insert(0, str(src_dir))
 
-    from tle_download.app import run
+    from app import run
 
     return run(project_root)
 
