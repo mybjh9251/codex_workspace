@@ -1,0 +1,8 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Style x:Key="NavigationRowStyle" TargetType="Border">
+        <Setter Property="Padding" Value="0,14" />
+        <Setter Property="BorderBrush" Value="{StaticResource MutedBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+</ResourceDictionary>

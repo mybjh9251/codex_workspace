@@ -1,0 +1,43 @@
+using StarlinkApp.Contracts;
+using StarlinkApp.Simulation;
+
+namespace StarlinkApp.Tests;
+
+public sealed class InProcessSimulatorClientTests
+{
+    [Fact]
+    public void DefaultSnapshotIsOnline()
+    {
+        var simulator = new InProcessSimulatorClient();
+
+        var snapshot = simulator.GetSnapshot();
+
+        Assert.Equal(ConnectionState.Online, snapshot.ConnectionState);
+        Assert.Equal("Online", snapshot.StatusTitle);
+        Assert.True(snapshot.DownloadMbps > 0);
+    }
+
+    [Fact]
+    public void ScenarioCanSwitchToDisconnected()
+    {
+        var simulator = new InProcessSimulatorClient();
+
+        var snapshot = simulator.SetScenario("disconnected");
+
+        Assert.Equal(ConnectionState.Disconnected, snapshot.ConnectionState);
+        Assert.Equal("Disconnected", snapshot.StatusTitle);
+        Assert.Equal("Connect to WiFi", snapshot.PrimaryActionLabel);
+    }
+
+    [Fact]
+    public void SpeedRunCommandReturnsAcceptedAck()
+    {
+        var simulator = new InProcessSimulatorClient();
+
+        var ack = simulator.SendCommand(new CommandRequest("speed.run"));
+
+        Assert.True(ack.Accepted);
+        Assert.Equal("speed.run", ack.Command);
+        Assert.Equal(ConnectionState.Online, ack.Snapshot.ConnectionState);
+    }
+}
