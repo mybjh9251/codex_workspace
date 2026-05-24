@@ -107,10 +107,20 @@
                     Height="790"
                     Style="{StaticResource PhoneShellStyle}">
                 <Grid>
-                    <pages:HomePage Visibility="{Binding IsHomePageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    <pages:SetupPage Visibility="{Binding IsSetupPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    <pages:ObstructionsPage Visibility="{Binding IsObstructionsPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                    <pages:SpeedPage Visibility="{Binding IsSpeedPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:HomePage DataContext="{Binding Home}"
+                                    Visibility="{Binding DataContext.IsHomePageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SetupPage DataContext="{Binding Setup}"
+                                     Visibility="{Binding DataContext.IsSetupPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:ObstructionsPage DataContext="{Binding Obstructions}"
+                                            Visibility="{Binding DataContext.IsObstructionsPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SpeedPage DataContext="{Binding Speed}"
+                                     Visibility="{Binding DataContext.IsSpeedPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:AdvancedSpeedPage DataContext="{Binding AdvancedSpeed}"
+                                             Visibility="{Binding DataContext.IsAdvancedSpeedPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:NetworkPage DataContext="{Binding Network}"
+                                       Visibility="{Binding DataContext.IsNetworkPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SettingsPage DataContext="{Binding Settings}"
+                                        Visibility="{Binding DataContext.IsSettingsPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
             </Border>
         </Grid>

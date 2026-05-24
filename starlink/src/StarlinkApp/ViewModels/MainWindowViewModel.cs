@@ -25,21 +25,6 @@ public sealed class MainWindowViewModel : ViewModelBase
         _settings = settings;
         _snapshot = simulator.GetSnapshot();
 
-        Scenarios = _simulator.GetScenarios();
-        NavigationItems =
-        [
-            new PageNavigationItem("home", "Home", "Connection status"),
-            new PageNavigationItem("setup", "Setup", "Install flow"),
-            new PageNavigationItem("obstructions", "Obstructions", "Sky view"),
-            new PageNavigationItem("speed", "Speed", "Speed test")
-        ];
-
-        ActivityLog =
-        [
-            "Simulator attached: in-process adapter",
-            $"Scenario loaded: {_snapshot.StatusTitle}"
-        ];
-
         ChangeScenarioCommand = new RelayCommand(ChangeScenario);
         NavigateCommand = new RelayCommand(Navigate);
         RunSpeedTestCommand = new RelayCommand(_ => SendCommand("speed.run"));
@@ -47,6 +32,33 @@ public sealed class MainWindowViewModel : ViewModelBase
         RetryConnectionCommand = new RelayCommand(_ => SendCommand("connection.retry"));
         ContinueSetupCommand = new RelayCommand(_ => SendCommand("setup.continue"));
         CheckObstructionsCommand = new RelayCommand(_ => SendCommand("obstruction.scan"));
+
+        Scenarios = _simulator.GetScenarios();
+        NavigationItems =
+        [
+            new PageNavigationItem("home", "Home", "Connection status"),
+            new PageNavigationItem("setup", "Setup", "Install flow"),
+            new PageNavigationItem("obstructions", "Obstructions", "Sky view"),
+            new PageNavigationItem("speed", "Speed", "Speed test"),
+            new PageNavigationItem("advancedSpeed", "Advanced Speed", "Network path"),
+            new PageNavigationItem("network", "Network", "Connected devices"),
+            new PageNavigationItem("settings", "Settings", "Runtime config")
+        ];
+
+        Home = new HomePageViewModel(NavigateCommand, RunSpeedTestCommand, RetryConnectionCommand);
+        Setup = new SetupPageViewModel(ContinueSetupCommand);
+        Obstructions = new ObstructionsPageViewModel(CheckObstructionsCommand);
+        Speed = new SpeedPageViewModel(RunAdvancedSpeedTestCommand);
+        AdvancedSpeed = new AdvancedSpeedPageViewModel(RunAdvancedSpeedTestCommand);
+        Network = new NetworkPageViewModel();
+        Settings = new SettingsPageViewModel(settings, Scenarios.Count);
+        UpdatePages();
+
+        ActivityLog =
+        [
+            "Simulator attached: in-process adapter",
+            $"Scenario loaded: {_snapshot.StatusTitle}"
+        ];
 
         if (startupWarnings is not null)
         {
@@ -77,59 +89,25 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public ICommand CheckObstructionsCommand { get; }
 
-    public ICommand PrimaryActionCommand => IsOnline ? RunSpeedTestCommand : RetryConnectionCommand;
+    public HomePageViewModel Home { get; }
 
-    public string AccountName => _snapshot.AccountName;
+    public SetupPageViewModel Setup { get; }
+
+    public ObstructionsPageViewModel Obstructions { get; }
+
+    public SpeedPageViewModel Speed { get; }
+
+    public AdvancedSpeedPageViewModel AdvancedSpeed { get; }
+
+    public NetworkPageViewModel Network { get; }
+
+    public SettingsPageViewModel Settings { get; }
 
     public string CurrentPageTitle => NavigationItems.First(i => i.Key == _currentPageKey).DisplayName;
 
     public string CurrentPageDescription => NavigationItems.First(i => i.Key == _currentPageKey).Description;
 
-    public string StatusTitle => _snapshot.StatusTitle;
-
-    public string StatusSubtitle => _snapshot.StatusSubtitle;
-
-    public string PrimaryActionLabel => _snapshot.PrimaryActionLabel;
-
-    public string DownloadText => $"{_snapshot.DownloadMbps:0} Mbps";
-
-    public string UploadText => $"{_snapshot.UploadMbps:0} Mbps upload";
-
-    public string LatencyText => _snapshot.LatencyMs > 0 ? $"{_snapshot.LatencyMs} ms" : "--";
-
-    public string DeviceCountText => $"{_snapshot.DeviceCount} devices";
-
-    public string PingSuccessText => _snapshot.PingSuccessPercent > 0 ? $"{_snapshot.PingSuccessPercent:0.00} %" : "--";
-
     public string RefreshIntervalText => $"{_settings.RefreshIntervalMs} ms refresh";
-
-    public string SetupStepText => IsOnline ? "CONNECTED" : "CONNECTING";
-
-    public string SetupHintText => IsOnline
-        ? "Starlink is online. Setup can continue with Wi-Fi and obstruction checks."
-        : "Plug in Starlink and keep the app open while the simulator searches for a link.";
-
-    public string ObstructionStatusText => _snapshot.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase)
-        ? "Obstruction detected"
-        : "Clear view";
-
-    public string ObstructionDetailText => _snapshot.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase)
-        ? "A portion of the sky view is blocked. Move Starlink for a wider clear area."
-        : "Starlink has a clear view of the sky.";
-
-    public string ObstructionPercentText => _snapshot.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase)
-        ? "7.4 % obstructed"
-        : "0.0 % obstructed";
-
-    public string SpeedTargetText => IsOnline ? "This device" : "No active target";
-
-    public double DownloadBarWidth => Math.Clamp(_snapshot.DownloadMbps, 0, 180);
-
-    public double UploadBarWidth => Math.Clamp(_snapshot.UploadMbps * 5, 0, 180);
-
-    public bool IsOnline => _snapshot.ConnectionState == ConnectionState.Online;
-
-    public bool IsDisconnected => _snapshot.ConnectionState == ConnectionState.Disconnected;
 
     public bool IsHomePageVisible => _currentPageKey == "home";
 
@@ -138,6 +116,12 @@ public sealed class MainWindowViewModel : ViewModelBase
     public bool IsObstructionsPageVisible => _currentPageKey == "obstructions";
 
     public bool IsSpeedPageVisible => _currentPageKey == "speed";
+
+    public bool IsAdvancedSpeedPageVisible => _currentPageKey == "advancedSpeed";
+
+    public bool IsNetworkPageVisible => _currentPageKey == "network";
+
+    public bool IsSettingsPageVisible => _currentPageKey == "settings";
 
     public void RefreshSnapshot()
     {
@@ -173,6 +157,9 @@ public sealed class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsSetupPageVisible));
         OnPropertyChanged(nameof(IsObstructionsPageVisible));
         OnPropertyChanged(nameof(IsSpeedPageVisible));
+        OnPropertyChanged(nameof(IsAdvancedSpeedPageVisible));
+        OnPropertyChanged(nameof(IsNetworkPageVisible));
+        OnPropertyChanged(nameof(IsSettingsPageVisible));
     }
 
     private void SendCommand(string command)
@@ -197,25 +184,17 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     private void RaiseSnapshotProperties()
     {
-        OnPropertyChanged(nameof(AccountName));
-        OnPropertyChanged(nameof(StatusTitle));
-        OnPropertyChanged(nameof(StatusSubtitle));
-        OnPropertyChanged(nameof(PrimaryActionLabel));
-        OnPropertyChanged(nameof(DownloadText));
-        OnPropertyChanged(nameof(UploadText));
-        OnPropertyChanged(nameof(LatencyText));
-        OnPropertyChanged(nameof(DeviceCountText));
-        OnPropertyChanged(nameof(PingSuccessText));
-        OnPropertyChanged(nameof(PrimaryActionCommand));
-        OnPropertyChanged(nameof(SetupStepText));
-        OnPropertyChanged(nameof(SetupHintText));
-        OnPropertyChanged(nameof(ObstructionStatusText));
-        OnPropertyChanged(nameof(ObstructionDetailText));
-        OnPropertyChanged(nameof(ObstructionPercentText));
-        OnPropertyChanged(nameof(SpeedTargetText));
-        OnPropertyChanged(nameof(DownloadBarWidth));
-        OnPropertyChanged(nameof(UploadBarWidth));
-        OnPropertyChanged(nameof(IsOnline));
-        OnPropertyChanged(nameof(IsDisconnected));
+        UpdatePages();
+    }
+
+    private void UpdatePages()
+    {
+        Home.Update(_snapshot);
+        Setup.Update(_snapshot);
+        Obstructions.Update(_snapshot);
+        Speed.Update(_snapshot);
+        AdvancedSpeed.Update(_snapshot);
+        Network.Update(_snapshot);
+        Settings.Update(_snapshot);
     }
 }

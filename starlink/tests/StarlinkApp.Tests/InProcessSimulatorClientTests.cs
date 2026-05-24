@@ -15,6 +15,9 @@ public sealed class InProcessSimulatorClientTests
         Assert.Equal(ConnectionState.Online, snapshot.ConnectionState);
         Assert.Equal("Online", snapshot.StatusTitle);
         Assert.True(snapshot.DownloadMbps > 0);
+        Assert.Equal(ObstructionSeverity.Clear, snapshot.Obstruction.Severity);
+        Assert.NotEmpty(snapshot.SpeedTest.Samples);
+        Assert.NotEmpty(snapshot.Network.Devices);
     }
 
     [Fact]
@@ -39,6 +42,7 @@ public sealed class InProcessSimulatorClientTests
         Assert.True(ack.Accepted);
         Assert.Equal("speed.run", ack.Command);
         Assert.Equal(ConnectionState.Online, ack.Snapshot.ConnectionState);
+        Assert.Equal(SpeedTestStatus.Complete, ack.Snapshot.SpeedTest.Status);
     }
 
     [Fact]
@@ -52,5 +56,6 @@ public sealed class InProcessSimulatorClientTests
         Assert.True(ack.Accepted);
         Assert.Equal("obstruction.scan", ack.Command);
         Assert.Equal("obstructed", ack.Snapshot.BackgroundHint);
+        Assert.Equal(100, ack.Snapshot.Obstruction.ScanProgressPercent);
     }
 }

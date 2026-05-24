@@ -1,0 +1,86 @@
+<UserControl x:Class="StarlinkApp.Views.Pages.NetworkPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Background="{StaticResource PhoneBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid Margin="28,24,28,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="9:41"
+                       Style="{StaticResource PhoneCaptionTextStyle}" />
+            <TextBlock Grid.Column="1"
+                       Text="LTE  Wi-Fi  Battery"
+                       Style="{StaticResource PhoneCaptionTextStyle}" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1"
+                      Margin="28,44,28,20"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <TextBlock Text="NETWORK"
+                           Style="{StaticResource PhoneCaptionTextStyle}" />
+                <TextBlock Text="{Binding Summary}"
+                           Margin="0,10,0,0"
+                           Style="{StaticResource SectionTitleTextStyle}" />
+                <TextBlock Text="{Binding DeviceCountText}"
+                           Margin="0,6,0,0"
+                           Style="{StaticResource MutedBodyTextStyle}" />
+
+                <ItemsControl Margin="0,28,0,0"
+                              ItemsSource="{Binding Devices}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource MetricCardStyle}"
+                                    Margin="0,0,0,12">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}"
+                                                   Style="{StaticResource RowTitleTextStyle}" />
+                                        <TextBlock Text="{Binding ConnectionType}"
+                                                   Margin="0,5,0,0"
+                                                   Style="{StaticResource PhoneCaptionTextStyle}" />
+                                        <TextBlock Text="{Binding ConnectedDuration}"
+                                                   Margin="0,5,0,0"
+                                                   Style="{StaticResource PhoneCaptionTextStyle}" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1"
+                                                HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding SignalQuality}"
+                                                   HorizontalAlignment="Right"
+                                                   Style="{StaticResource PhoneCaptionTextStyle}" />
+                                        <TextBlock Text="{Binding UsageText}"
+                                                   Margin="0,8,0,0"
+                                                   HorizontalAlignment="Right"
+                                                   Style="{StaticResource MutedBodyTextStyle}" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Border Grid.Row="2"
+                Height="5"
+                Width="160"
+                Margin="0,0,0,14"
+                HorizontalAlignment="Center"
+                Background="{StaticResource PrimaryTextBrush}"
+                CornerRadius="3" />
+    </Grid>
+</UserControl>

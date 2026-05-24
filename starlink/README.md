@@ -3,6 +3,7 @@
 `StarlinkApp` is a WPF desktop simulator that recreates the observable UX, screen flow, and state behavior of the Starlink mobile app for learning and implementation practice.
 
 This app does not connect to real Starlink accounts, devices, private APIs, or device-control protocols. It uses local scenarios and an in-process simulator.
+The simulator contract is separated so the WPF client can later talk to an external simulator process.
 
 ## Project Layout
 
@@ -59,7 +60,14 @@ The current slice includes:
 - `Setup`
 - `Obstructions`
 - `Speed`
+- `AdvancedSpeed`
+- `Network`
+- `Settings`
 - `settings.json` / `scenarios.json` fallback behavior
+- obstruction, speed test, and network state snapshots
+- page-specific view models
+- `SimulationEngine`
+- TCP simulator adapter skeleton with in-process fallback
 - simulator contract tests
 
-Next implementation candidates are `AdvancedSpeed`, `Network`, and `Settings`.
+Next implementation candidates are Settings save/update flow, Support/Feedback pages, and a real TCP simulator server process.

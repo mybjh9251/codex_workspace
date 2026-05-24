@@ -47,7 +47,41 @@
                            HorizontalAlignment="Center"
                            VerticalAlignment="Center"
                            Style="{StaticResource MetricTextStyle}" />
+                <ItemsControl Width="178"
+                              Height="178"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              ItemsSource="{Binding Cells}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Rows="5"
+                                         Columns="5" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Margin="2"
+                                    BorderBrush="{StaticResource MutedBorderBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="6"
+                                    Background="#12000000">
+                                <TextBlock Text="{Binding Marker}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center"
+                                           Foreground="{StaticResource StarlinkBlueBrush}"
+                                           FontWeight="SemiBold" />
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </Grid>
+
+            <TextBlock Text="{Binding ScanProgressText}"
+                       Margin="0,12,0,0"
+                       Style="{StaticResource PhoneCaptionTextStyle}" />
+            <TextBlock Text="{Binding LastScanText}"
+                       Margin="0,4,0,0"
+                       Style="{StaticResource PhoneCaptionTextStyle}" />
 
             <Button Content="Check for obstructions"
                     Command="{Binding CheckObstructionsCommand}"

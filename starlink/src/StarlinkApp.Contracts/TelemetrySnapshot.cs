@@ -13,4 +13,7 @@ public sealed record TelemetrySnapshot(
     string StatusTitle,
     string StatusSubtitle,
     string PrimaryActionLabel,
-    string BackgroundHint);
+    string BackgroundHint,
+    ObstructionSnapshot Obstruction,
+    SpeedTestSnapshot SpeedTest,
+    NetworkSnapshot Network);

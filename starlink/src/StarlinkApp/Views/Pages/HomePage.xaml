@@ -126,7 +126,9 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource NavigationRowStyle}">
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="network"
+                        Style="{StaticResource NavigationRowButtonStyle}">
                     <Grid>
                         <StackPanel>
                             <TextBlock Text="Network"
@@ -139,7 +141,7 @@
                                    Text=">"
                                    Style="{StaticResource RowTitleTextStyle}" />
                     </Grid>
-                </Border>
+                </Button>
 
                 <Button Command="{Binding NavigateCommand}"
                         CommandParameter="obstructions"
@@ -158,6 +160,30 @@
                         Style="{StaticResource NavigationRowButtonStyle}">
                     <Grid>
                         <TextBlock Text="Speed"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text=">"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                    </Grid>
+                </Button>
+
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="advancedSpeed"
+                        Style="{StaticResource NavigationRowButtonStyle}">
+                    <Grid>
+                        <TextBlock Text="Advanced Speed"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text=">"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                    </Grid>
+                </Button>
+
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="settings"
+                        Style="{StaticResource NavigationRowButtonStyle}">
+                    <Grid>
+                        <TextBlock Text="Settings"
                                    Style="{StaticResource RowTitleTextStyle}" />
                         <TextBlock HorizontalAlignment="Right"
                                    Text=">"
