@@ -25,21 +25,39 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
                 <StackPanel>
                     <TextBlock Text="SIMULATOR"
                                Style="{StaticResource CaptionTextStyle}" />
-                    <TextBlock Text="Home vertical slice"
+                    <TextBlock Text="{Binding CurrentPageTitle}"
                                Margin="0,8,0,0"
                                Style="{StaticResource SectionTitleTextStyle}" />
-                    <TextBlock Text="In-process simulator now, TCP server later."
+                    <TextBlock Text="{Binding CurrentPageDescription}"
                                Margin="0,8,0,0"
                                Style="{StaticResource MutedBodyTextStyle}" />
+                    <TextBlock Text="{Binding RefreshIntervalText}"
+                               Margin="0,8,0,0"
+                               Style="{StaticResource CaptionTextStyle}" />
                 </StackPanel>
 
                 <ItemsControl Grid.Row="1"
+                              Margin="0,28,0,0"
+                              ItemsSource="{Binding NavigationItems}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding DisplayName}"
+                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding Key}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Margin="0,0,0,10" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <ItemsControl Grid.Row="2"
                               Margin="0,28,0,0"
                               ItemsSource="{Binding Scenarios}">
                     <ItemsControl.ItemTemplate>
@@ -53,7 +71,7 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <Border Grid.Row="2"
+                <Border Grid.Row="3"
                         Margin="0,20,0,0"
                         Padding="16"
                         Background="{StaticResource PanelBackgroundBrush}"
@@ -88,7 +106,12 @@
             <Border Width="420"
                     Height="790"
                     Style="{StaticResource PhoneShellStyle}">
-                <pages:HomePage />
+                <Grid>
+                    <pages:HomePage Visibility="{Binding IsHomePageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SetupPage Visibility="{Binding IsSetupPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:ObstructionsPage Visibility="{Binding IsObstructionsPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SpeedPage Visibility="{Binding IsSpeedPageVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                </Grid>
             </Border>
         </Grid>
     </Grid>

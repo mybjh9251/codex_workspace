@@ -40,4 +40,17 @@ public sealed class InProcessSimulatorClientTests
         Assert.Equal("speed.run", ack.Command);
         Assert.Equal(ConnectionState.Online, ack.Snapshot.ConnectionState);
     }
+
+    [Fact]
+    public void ObstructionScenarioCanRunScanCommand()
+    {
+        var simulator = new InProcessSimulatorClient();
+        simulator.SetScenario("obstructed");
+
+        var ack = simulator.SendCommand(new CommandRequest("obstruction.scan"));
+
+        Assert.True(ack.Accepted);
+        Assert.Equal("obstruction.scan", ack.Command);
+        Assert.Equal("obstructed", ack.Snapshot.BackgroundHint);
+    }
 }

@@ -4,42 +4,30 @@ namespace StarlinkApp.Simulation;
 
 public sealed class InProcessSimulatorClient : ISimulatorClient
 {
-    private readonly List<ScenarioDefinition> _scenarios =
-    [
-        new(
-            "online",
-            "Online",
-            "Starlink is connected and primary rows are active.",
-            ConnectionState.Online,
-            139,
-            18,
-            31,
-            3,
-            "online"),
-        new(
-            "connecting",
-            "Connecting",
-            "Starlink is searching for connectivity.",
-            ConnectionState.Connecting,
-            0,
-            0,
-            0,
-            0,
-            "connecting"),
-        new(
-            "disconnected",
-            "Disconnected",
-            "Starlink is unreachable and needs user action.",
-            ConnectionState.Disconnected,
-            0,
-            0,
-            0,
-            0,
-            "disconnected")
-    ];
-
-    private string _scenarioKey = "online";
+    private readonly IReadOnlyList<ScenarioDefinition> _scenarios;
+    private readonly string _accountName;
+    private string _scenarioKey;
     private double _speedPulse;
+
+    public InProcessSimulatorClient()
+        : this(AppSettings.Default, SimulatorConfigurationLoader.CreateDefaultScenarios())
+    {
+    }
+
+    public InProcessSimulatorClient(AppSettings settings, IReadOnlyList<ScenarioDefinition> scenarios)
+    {
+        _accountName = string.IsNullOrWhiteSpace(settings.AccountName)
+            ? AppSettings.Default.AccountName
+            : settings.AccountName;
+
+        _scenarios = scenarios.Count > 0
+            ? scenarios
+            : SimulatorConfigurationLoader.CreateDefaultScenarios();
+
+        _scenarioKey = _scenarios.Any(s => s.Key.Equals(settings.DefaultScenarioKey, StringComparison.OrdinalIgnoreCase))
+            ? settings.DefaultScenarioKey
+            : _scenarios[0].Key;
+    }
 
     public IReadOnlyList<ScenarioDefinition> GetScenarios() => _scenarios;
 
@@ -52,7 +40,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
             ? Math.Sin(_speedPulse * Math.PI * 2) * 4
             : 0;
 
-        return CreateSnapshot(scenario, downloadOffset);
+        return CreateSnapshot(scenario, _accountName, downloadOffset);
     }
 
     public TelemetrySnapshot SetScenario(string scenarioKey)
@@ -66,7 +54,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
         if (request.Command.Equals("speed.run", StringComparison.OrdinalIgnoreCase))
         {
             _scenarioKey = "online";
-            var snapshot = CreateSnapshot(FindScenario(_scenarioKey), 9);
+            var snapshot = CreateSnapshot(FindScenario(_scenarioKey), _accountName, 9);
 
             return new CommandAck(
                 request.Command,
@@ -87,6 +75,43 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
                 snapshot);
         }
 
+        if (request.Command.Equals("setup.continue", StringComparison.OrdinalIgnoreCase))
+        {
+            _scenarioKey = "connecting";
+            var snapshot = GetSnapshot();
+
+            return new CommandAck(
+                request.Command,
+                true,
+                "Setup step advanced.",
+                snapshot);
+        }
+
+        if (request.Command.Equals("obstruction.scan", StringComparison.OrdinalIgnoreCase))
+        {
+            var snapshot = GetSnapshot();
+
+            return new CommandAck(
+                request.Command,
+                true,
+                snapshot.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase)
+                    ? "Obstruction scan found an area to improve."
+                    : "Obstruction scan completed with a clear view.",
+                snapshot);
+        }
+
+        if (request.Command.Equals("speed.runAdvanced", StringComparison.OrdinalIgnoreCase))
+        {
+            _scenarioKey = "online";
+            var snapshot = CreateSnapshot(FindScenario(_scenarioKey), _accountName, 15);
+
+            return new CommandAck(
+                request.Command,
+                true,
+                "Advanced speed test completed.",
+                snapshot);
+        }
+
         return new CommandAck(
             request.Command,
             false,
@@ -100,7 +125,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
             ?? _scenarios[0];
     }
 
-    private static TelemetrySnapshot CreateSnapshot(ScenarioDefinition scenario, double downloadOffset)
+    private static TelemetrySnapshot CreateSnapshot(ScenarioDefinition scenario, string accountName, double downloadOffset)
     {
         var roundedDownload = Math.Max(0, Math.Round(scenario.DownloadMbps + downloadOffset, 1));
 
@@ -109,7 +134,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
             ConnectionState.Online => new TelemetrySnapshot(
                 DateTimeOffset.UtcNow,
                 scenario.Key,
-                "Starlink",
+                accountName,
                 scenario.ConnectionState,
                 roundedDownload,
                 scenario.UploadMbps,
@@ -123,7 +148,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
             ConnectionState.Connecting => new TelemetrySnapshot(
                 DateTimeOffset.UtcNow,
                 scenario.Key,
-                "Select Starlink",
+                accountName,
                 scenario.ConnectionState,
                 0,
                 0,
@@ -137,7 +162,7 @@ public sealed class InProcessSimulatorClient : ISimulatorClient
             _ => new TelemetrySnapshot(
                 DateTimeOffset.UtcNow,
                 scenario.Key,
-                "Select Starlink",
+                accountName,
                 scenario.ConnectionState,
                 0,
                 0,

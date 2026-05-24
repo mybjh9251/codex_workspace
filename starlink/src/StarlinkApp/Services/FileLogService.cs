@@ -8,6 +8,19 @@ public interface IAppLogService
     void Write(string eventName, string message);
 }
 
+public sealed class NullLogService : IAppLogService
+{
+    public static NullLogService Instance { get; } = new();
+
+    private NullLogService()
+    {
+    }
+
+    public void Write(string eventName, string message)
+    {
+    }
+}
+
 public sealed class FileLogService : IAppLogService
 {
     private readonly string _logDirectory;

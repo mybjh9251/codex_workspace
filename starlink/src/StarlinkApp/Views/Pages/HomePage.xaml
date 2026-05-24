@@ -30,7 +30,7 @@
             </Grid.RowDefinitions>
 
             <StackPanel>
-                <TextBlock Text="{Binding AccountName}"
+                    <TextBlock Text="{Binding AccountName}"
                            Style="{StaticResource PhoneCaptionTextStyle}" />
 
                 <StackPanel Orientation="Horizontal"
@@ -104,6 +104,18 @@
                     </Border>
                 </Grid>
 
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="setup"
+                        Style="{StaticResource NavigationRowButtonStyle}">
+                    <Grid>
+                        <TextBlock Text="Setup"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text=">"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                    </Grid>
+                </Button>
+
                 <Border Style="{StaticResource NavigationRowStyle}">
                     <Grid>
                         <TextBlock Text="Statistics"
@@ -129,7 +141,9 @@
                     </Grid>
                 </Border>
 
-                <Border Style="{StaticResource NavigationRowStyle}">
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="obstructions"
+                        Style="{StaticResource NavigationRowButtonStyle}">
                     <Grid>
                         <TextBlock Text="Obstructions"
                                    Style="{StaticResource RowTitleTextStyle}" />
@@ -137,10 +151,22 @@
                                    Text=">"
                                    Style="{StaticResource RowTitleTextStyle}" />
                     </Grid>
-                </Border>
+                </Button>
+
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="speed"
+                        Style="{StaticResource NavigationRowButtonStyle}">
+                    <Grid>
+                        <TextBlock Text="Speed"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                        <TextBlock HorizontalAlignment="Right"
+                                   Text=">"
+                                   Style="{StaticResource RowTitleTextStyle}" />
+                    </Grid>
+                </Button>
 
                 <Button Content="{Binding PrimaryActionLabel}"
-                        Command="{Binding RunSpeedTestCommand}"
+                        Command="{Binding PrimaryActionCommand}"
                         Style="{StaticResource PrimaryButtonStyle}"
                         Margin="0,18,0,0" />
             </StackPanel>

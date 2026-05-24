@@ -5,6 +5,11 @@
     <ProjectReference Include="..\StarlinkApp.Simulation\StarlinkApp.Simulation.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="settings.template.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="scenarios.default.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>

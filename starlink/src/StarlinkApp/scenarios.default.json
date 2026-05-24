@@ -1,0 +1,46 @@
+[
+  {
+    "key": "online",
+    "displayName": "Online",
+    "description": "Starlink is connected and primary rows are active.",
+    "connectionState": "Online",
+    "downloadMbps": 139,
+    "uploadMbps": 18,
+    "latencyMs": 31,
+    "deviceCount": 3,
+    "backgroundHint": "online"
+  },
+  {
+    "key": "connecting",
+    "displayName": "Connecting",
+    "description": "Starlink is searching for connectivity.",
+    "connectionState": "Connecting",
+    "downloadMbps": 0,
+    "uploadMbps": 0,
+    "latencyMs": 0,
+    "deviceCount": 0,
+    "backgroundHint": "connecting"
+  },
+  {
+    "key": "disconnected",
+    "displayName": "Disconnected",
+    "description": "Starlink is unreachable and needs user action.",
+    "connectionState": "Disconnected",
+    "downloadMbps": 0,
+    "uploadMbps": 0,
+    "latencyMs": 0,
+    "deviceCount": 0,
+    "backgroundHint": "disconnected"
+  },
+  {
+    "key": "obstructed",
+    "displayName": "Obstructed",
+    "description": "A partial obstruction is reducing clear sky visibility.",
+    "connectionState": "Online",
+    "downloadMbps": 82,
+    "uploadMbps": 9,
+    "latencyMs": 58,
+    "deviceCount": 2,
+    "backgroundHint": "obstructed"
+  }
+]

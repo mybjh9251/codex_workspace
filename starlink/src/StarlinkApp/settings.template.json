@@ -1,0 +1,6 @@
+{
+  "accountName": "Starlink",
+  "defaultScenarioKey": "online",
+  "refreshIntervalMs": 1000,
+  "enableFileLogging": true
+}
