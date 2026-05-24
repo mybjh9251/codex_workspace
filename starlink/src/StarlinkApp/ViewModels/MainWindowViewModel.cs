@@ -10,19 +10,23 @@ public sealed class MainWindowViewModel : ViewModelBase
 {
     private readonly ISimulatorClient _simulator;
     private readonly IAppLogService _logService;
-    private readonly AppSettings _settings;
+    private readonly string _runtimeRoot;
+    private AppSettings _settings;
     private TelemetrySnapshot _snapshot;
     private string _currentPageKey = "home";
+    private string _transitionStatusText = "Home loaded";
 
     public MainWindowViewModel(
         ISimulatorClient simulator,
         IAppLogService logService,
         AppSettings settings,
+        string runtimeRoot,
         IReadOnlyList<string>? startupWarnings = null)
     {
         _simulator = simulator;
         _logService = logService;
         _settings = settings;
+        _runtimeRoot = runtimeRoot;
         _snapshot = simulator.GetSnapshot();
 
         ChangeScenarioCommand = new RelayCommand(ChangeScenario);
@@ -42,7 +46,8 @@ public sealed class MainWindowViewModel : ViewModelBase
             new PageNavigationItem("speed", "Speed", "Speed test"),
             new PageNavigationItem("advancedSpeed", "Advanced Speed", "Network path"),
             new PageNavigationItem("network", "Network", "Connected devices"),
-            new PageNavigationItem("settings", "Settings", "Runtime config")
+            new PageNavigationItem("settings", "Settings", "Runtime config"),
+            new PageNavigationItem("support", "Support", "Troubleshooting")
         ];
 
         Home = new HomePageViewModel(NavigateCommand, RunSpeedTestCommand, RetryConnectionCommand);
@@ -51,7 +56,8 @@ public sealed class MainWindowViewModel : ViewModelBase
         Speed = new SpeedPageViewModel(RunAdvancedSpeedTestCommand);
         AdvancedSpeed = new AdvancedSpeedPageViewModel(RunAdvancedSpeedTestCommand);
         Network = new NetworkPageViewModel();
-        Settings = new SettingsPageViewModel(settings, Scenarios.Count);
+        Settings = new SettingsPageViewModel(settings, Scenarios.Count, SaveSettings);
+        Support = new SupportPageViewModel(SubmitFeedback);
         UpdatePages();
 
         ActivityLog =
@@ -103,11 +109,19 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public SettingsPageViewModel Settings { get; }
 
+    public SupportPageViewModel Support { get; }
+
     public string CurrentPageTitle => NavigationItems.First(i => i.Key == _currentPageKey).DisplayName;
 
     public string CurrentPageDescription => NavigationItems.First(i => i.Key == _currentPageKey).Description;
 
     public string RefreshIntervalText => $"{_settings.RefreshIntervalMs} ms refresh";
+
+    public string TransitionStatusText
+    {
+        get => _transitionStatusText;
+        private set => SetProperty(ref _transitionStatusText, value);
+    }
 
     public bool IsHomePageVisible => _currentPageKey == "home";
 
@@ -122,6 +136,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     public bool IsNetworkPageVisible => _currentPageKey == "network";
 
     public bool IsSettingsPageVisible => _currentPageKey == "settings";
+
+    public bool IsSupportPageVisible => _currentPageKey == "support";
 
     public void RefreshSnapshot()
     {
@@ -150,6 +166,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         }
 
         _currentPageKey = pageKey;
+        TransitionStatusText = $"Showing {CurrentPageTitle}";
         AddActivity($"Page selected: {CurrentPageTitle}");
         OnPropertyChanged(nameof(CurrentPageTitle));
         OnPropertyChanged(nameof(CurrentPageDescription));
@@ -160,6 +177,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(IsAdvancedSpeedPageVisible));
         OnPropertyChanged(nameof(IsNetworkPageVisible));
         OnPropertyChanged(nameof(IsSettingsPageVisible));
+        OnPropertyChanged(nameof(IsSupportPageVisible));
     }
 
     private void SendCommand(string command)
@@ -170,6 +188,30 @@ public sealed class MainWindowViewModel : ViewModelBase
         AddActivity(ack.Message);
         _logService.Write(ack.Accepted ? "command.accepted" : "command.rejected", ack.Message);
         RaiseSnapshotProperties();
+    }
+
+    private string SubmitFeedback(string feedback)
+    {
+        var ack = _simulator.SendCommand(new CommandRequest("feedback.submit", feedback));
+        _snapshot = ack.Snapshot;
+
+        AddActivity(ack.Message);
+        _logService.Write(ack.Accepted ? "feedback.accepted" : "feedback.rejected", ack.Message);
+        RaiseSnapshotProperties();
+
+        return ack.Message;
+    }
+
+    private string SaveSettings(AppSettings settings)
+    {
+        _settings = settings;
+        SimulatorConfigurationLoader.SaveSettings(_runtimeRoot, settings);
+        Settings.ApplySettings(settings);
+        AddActivity("settings.json saved. Restart the app to apply transport and logging changes.");
+        _logService.Write("settings.saved", $"mode={settings.SimulatorMode}; endpoint={settings.SimulatorEndpoint}");
+        OnPropertyChanged(nameof(RefreshIntervalText));
+
+        return "settings.json saved. Restart the app to apply transport and logging changes.";
     }
 
     private void AddActivity(string message)

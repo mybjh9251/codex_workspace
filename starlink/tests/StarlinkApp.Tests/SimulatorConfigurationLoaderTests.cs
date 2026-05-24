@@ -39,7 +39,9 @@ public sealed class SimulatorConfigurationLoaderTests
                   "accountName": "Lab Starlink",
                   "defaultScenarioKey": "lab",
                   "refreshIntervalMs": 750,
-                  "enableFileLogging": false
+                  "enableFileLogging": false,
+                  "simulatorMode": "Tcp",
+                  "simulatorEndpoint": "tcp://127.0.0.1:6600"
                 }
                 """);
 
@@ -69,9 +71,43 @@ public sealed class SimulatorConfigurationLoaderTests
             Assert.Equal("Lab Starlink", configuration.Settings.AccountName);
             Assert.Equal(750, configuration.Settings.RefreshIntervalMs);
             Assert.False(configuration.Settings.EnableFileLogging);
+            Assert.Equal("Tcp", configuration.Settings.SimulatorMode);
+            Assert.Equal("tcp://127.0.0.1:6600", configuration.Settings.SimulatorEndpoint);
             Assert.Equal("lab", snapshot.ScenarioKey);
             Assert.Equal("Lab Starlink", snapshot.AccountName);
             Assert.Equal(ConnectionState.Online, snapshot.ConnectionState);
+        }
+        finally
+        {
+            Directory.Delete(runtimeRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SaveSettingsWritesRuntimeSettingsJson()
+    {
+        var runtimeRoot = CreateTempDirectory();
+
+        try
+        {
+            var settings = AppSettings.Default with
+            {
+                AccountName = "Saved Starlink",
+                DefaultScenarioKey = "obstructed",
+                RefreshIntervalMs = 1500,
+                EnableFileLogging = false,
+                SimulatorMode = "Tcp",
+                SimulatorEndpoint = "tcp://127.0.0.1:5517"
+            };
+
+            SimulatorConfigurationLoader.SaveSettings(runtimeRoot, settings);
+            var configuration = SimulatorConfigurationLoader.Load(runtimeRoot);
+
+            Assert.Equal("Saved Starlink", configuration.Settings.AccountName);
+            Assert.Equal("obstructed", configuration.Settings.DefaultScenarioKey);
+            Assert.Equal(1500, configuration.Settings.RefreshIntervalMs);
+            Assert.False(configuration.Settings.EnableFileLogging);
+            Assert.Equal("Tcp", configuration.Settings.SimulatorMode);
         }
         finally
         {

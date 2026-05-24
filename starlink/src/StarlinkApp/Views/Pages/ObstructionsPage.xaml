@@ -63,12 +63,27 @@
                             <Border Margin="2"
                                     BorderBrush="{StaticResource MutedBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="6"
-                                    Background="#12000000">
+                                    CornerRadius="12">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource ObstructionClearBrush}" />
+                                        <Setter Property="Opacity" Value="0.72" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Level}" Value="1">
+                                                <Setter Property="Background" Value="{StaticResource ObstructionPartialBrush}" />
+                                                <Setter Property="Opacity" Value="0.9" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Level}" Value="2">
+                                                <Setter Property="Background" Value="{StaticResource ObstructionHeavyBrush}" />
+                                                <Setter Property="Opacity" Value="0.96" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
                                 <TextBlock Text="{Binding Marker}"
                                            HorizontalAlignment="Center"
                                            VerticalAlignment="Center"
-                                           Foreground="{StaticResource StarlinkBlueBrush}"
+                                           Foreground="{StaticResource PrimaryTextBrush}"
                                            FontWeight="SemiBold" />
                             </Border>
                         </DataTemplate>

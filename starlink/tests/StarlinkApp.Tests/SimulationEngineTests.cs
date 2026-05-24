@@ -25,9 +25,14 @@ public sealed class SimulationEngineTests
         var ack = engine.Execute(new CommandRequest("speed.runAdvanced"));
 
         Assert.True(ack.Accepted);
-        Assert.Equal(SpeedTestStatus.Complete, ack.Snapshot.SpeedTest.Status);
+        Assert.Equal(SpeedTestStatus.Running, ack.Snapshot.SpeedTest.Status);
         Assert.NotEmpty(ack.Snapshot.SpeedTest.Samples);
         Assert.True(ack.Snapshot.SpeedTest.Segments.Count >= 3);
+
+        engine.GetSnapshot();
+        var completedSnapshot = engine.GetSnapshot();
+
+        Assert.Equal(SpeedTestStatus.Complete, completedSnapshot.SpeedTest.Status);
     }
 
     [Fact]
@@ -53,5 +58,32 @@ public sealed class SimulationEngineTests
 
         Assert.True(ack.Accepted);
         Assert.Contains("fallback handled command", ack.Message);
+    }
+
+    [Fact]
+    public async Task TcpSimulatorClientUsesServerWhenAvailable()
+    {
+        var settings = AppSettings.Default with { SimulatorEndpoint = "tcp://127.0.0.1:0" };
+        var server = new TcpSimulatorServer(
+            settings,
+            SimulatorConfigurationLoader.CreateDefaultScenarios(),
+            new SimulatorEndpoint("127.0.0.1", 0));
+        using var cts = new CancellationTokenSource();
+
+        var serverTask = server.RunAsync(cts.Token);
+        SpinWait.SpinUntil(() => server.BoundPort > 0, TimeSpan.FromSeconds(3));
+
+        var client = new TcpSimulatorClient(
+            new SimulatorEndpoint("127.0.0.1", server.BoundPort),
+            AppSettings.Default,
+            SimulatorConfigurationLoader.CreateDefaultScenarios());
+
+        var ack = client.SendCommand(new CommandRequest("feedback.submit", "Looks good."));
+
+        cts.Cancel();
+        await serverTask;
+
+        Assert.True(ack.Accepted);
+        Assert.DoesNotContain("fallback handled command", ack.Message);
     }
 }

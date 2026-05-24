@@ -27,10 +27,13 @@ public partial class MainWindow : Window
             logService.Write("config.warning", warning);
         }
 
+        var simulator = CreateSimulator(configuration);
+
         _viewModel = new MainWindowViewModel(
-            new InProcessSimulatorClient(configuration.Settings, configuration.Scenarios),
+            simulator,
             logService,
             configuration.Settings,
+            runtimeRoot,
             configuration.Warnings);
 
         DataContext = _viewModel;
@@ -41,5 +44,18 @@ public partial class MainWindow : Window
         };
         _timer.Tick += (_, _) => _viewModel.RefreshSnapshot();
         _timer.Start();
+    }
+
+    private static ISimulatorClient CreateSimulator(SimulatorConfiguration configuration)
+    {
+        if (configuration.Settings.SimulatorMode.Equals("Tcp", StringComparison.OrdinalIgnoreCase))
+        {
+            return new TcpSimulatorClient(
+                SimulatorEndpoint.Parse(configuration.Settings.SimulatorEndpoint),
+                configuration.Settings,
+                configuration.Scenarios);
+        }
+
+        return new InProcessSimulatorClient(configuration.Settings, configuration.Scenarios);
     }
 }

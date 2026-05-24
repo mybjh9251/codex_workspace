@@ -9,6 +9,7 @@ public sealed class SimulationEngine
     private string _scenarioKey;
     private double _speedPulse;
     private SpeedTestStatus _speedStatus = SpeedTestStatus.Idle;
+    private int _speedTicksRemaining;
     private int _scanProgress;
 
     public SimulationEngine(AppSettings settings, IReadOnlyList<ScenarioDefinition> scenarios)
@@ -42,6 +43,15 @@ public sealed class SimulationEngine
             _scanProgress = Math.Min(100, _scanProgress + 12);
         }
 
+        if (_speedStatus == SpeedTestStatus.Running && _speedTicksRemaining > 0)
+        {
+            _speedTicksRemaining--;
+            if (_speedTicksRemaining == 0)
+            {
+                _speedStatus = SpeedTestStatus.Complete;
+            }
+        }
+
         return CreateSnapshot(scenario, downloadOffset);
     }
 
@@ -56,18 +66,20 @@ public sealed class SimulationEngine
     {
         if (request.Command.Equals("speed.run", StringComparison.OrdinalIgnoreCase))
         {
-            _speedStatus = SpeedTestStatus.Complete;
-            var snapshot = CreateOnlineSnapshot(9);
+            _speedStatus = SpeedTestStatus.Running;
+            _speedTicksRemaining = 2;
+            var snapshot = CreateOnlineSnapshot(6);
 
-            return new CommandAck(request.Command, true, "Speed test completed from the in-process simulator.", snapshot);
+            return new CommandAck(request.Command, true, "Speed test started.", snapshot);
         }
 
         if (request.Command.Equals("speed.runAdvanced", StringComparison.OrdinalIgnoreCase))
         {
-            _speedStatus = SpeedTestStatus.Complete;
-            var snapshot = CreateOnlineSnapshot(15);
+            _speedStatus = SpeedTestStatus.Running;
+            _speedTicksRemaining = 2;
+            var snapshot = CreateOnlineSnapshot(11);
 
-            return new CommandAck(request.Command, true, "Advanced speed test completed.", snapshot);
+            return new CommandAck(request.Command, true, "Advanced speed test started.", snapshot);
         }
 
         if (request.Command.Equals("connection.retry", StringComparison.OrdinalIgnoreCase))
@@ -84,13 +96,18 @@ public sealed class SimulationEngine
 
         if (request.Command.Equals("obstruction.scan", StringComparison.OrdinalIgnoreCase))
         {
-            _scanProgress = 100;
+            _scanProgress = 15;
             var snapshot = GetSnapshot();
             var message = snapshot.Obstruction.Severity == ObstructionSeverity.Clear
-                ? "Obstruction scan completed with a clear view."
-                : "Obstruction scan found an area to improve.";
+                ? "Obstruction scan started for a clear view check."
+                : "Obstruction scan started for a blocked area check.";
 
             return new CommandAck(request.Command, true, message, snapshot);
+        }
+
+        if (request.Command.Equals("feedback.submit", StringComparison.OrdinalIgnoreCase))
+        {
+            return new CommandAck(request.Command, true, "Feedback submitted to the local simulator.", GetSnapshot());
         }
 
         return new CommandAck(request.Command, false, $"Unknown simulator command: {request.Command}", GetSnapshot());

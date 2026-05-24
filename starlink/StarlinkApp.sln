@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlinkApp.Simulation", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlinkApp.Tests", "tests\StarlinkApp.Tests\StarlinkApp.Tests.csproj", "{8140A07C-5940-4193-8C5C-16ECF18A1106}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StarlinkSimulator", "src\StarlinkSimulator\StarlinkSimulator.csproj", "{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,6 +73,18 @@ Global
 		{8140A07C-5940-4193-8C5C-16ECF18A1106}.Release|x64.Build.0 = Release|Any CPU
 		{8140A07C-5940-4193-8C5C-16ECF18A1106}.Release|x86.ActiveCfg = Release|Any CPU
 		{8140A07C-5940-4193-8C5C-16ECF18A1106}.Release|x86.Build.0 = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|x64.Build.0 = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Debug|x86.Build.0 = Debug|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|x64.ActiveCfg = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|x64.Build.0 = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|x86.ActiveCfg = Release|Any CPU
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -80,5 +94,6 @@ Global
 		{8BCA7D94-EB96-4783-B612-F1E4EC780B77} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{302EC3E8-1EBC-41FE-8283-5F3E66181C8B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{8140A07C-5940-4193-8C5C-16ECF18A1106} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{26C5B545-3D88-48CE-9BD7-47F4C33F4D2B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

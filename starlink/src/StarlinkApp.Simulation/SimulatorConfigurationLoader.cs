@@ -101,7 +101,9 @@ public static class SimulatorConfigurationLoader
             {
                 AccountName = string.IsNullOrWhiteSpace(settings.AccountName) ? AppSettings.Default.AccountName : settings.AccountName,
                 DefaultScenarioKey = string.IsNullOrWhiteSpace(settings.DefaultScenarioKey) ? AppSettings.Default.DefaultScenarioKey : settings.DefaultScenarioKey,
-                RefreshIntervalMs = settings.RefreshIntervalMs < 250 ? AppSettings.Default.RefreshIntervalMs : settings.RefreshIntervalMs
+                RefreshIntervalMs = settings.RefreshIntervalMs < 250 ? AppSettings.Default.RefreshIntervalMs : settings.RefreshIntervalMs,
+                SimulatorMode = string.IsNullOrWhiteSpace(settings.SimulatorMode) ? AppSettings.Default.SimulatorMode : settings.SimulatorMode,
+                SimulatorEndpoint = string.IsNullOrWhiteSpace(settings.SimulatorEndpoint) ? AppSettings.Default.SimulatorEndpoint : settings.SimulatorEndpoint
             };
         }
         catch (JsonException ex)
@@ -148,5 +150,22 @@ public static class SimulatorConfigurationLoader
             warnings.Add($"scenarios.json could not be parsed; using built-in scenario presets. {ex.Message}");
             return CreateDefaultScenarios();
         }
+    }
+
+    public static void SaveSettings(string runtimeRoot, AppSettings settings)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(runtimeRoot);
+        Directory.CreateDirectory(runtimeRoot);
+
+        var normalized = settings with
+        {
+            AccountName = string.IsNullOrWhiteSpace(settings.AccountName) ? AppSettings.Default.AccountName : settings.AccountName,
+            DefaultScenarioKey = string.IsNullOrWhiteSpace(settings.DefaultScenarioKey) ? AppSettings.Default.DefaultScenarioKey : settings.DefaultScenarioKey,
+            RefreshIntervalMs = settings.RefreshIntervalMs < 250 ? AppSettings.Default.RefreshIntervalMs : settings.RefreshIntervalMs,
+            SimulatorMode = string.IsNullOrWhiteSpace(settings.SimulatorMode) ? AppSettings.Default.SimulatorMode : settings.SimulatorMode,
+            SimulatorEndpoint = string.IsNullOrWhiteSpace(settings.SimulatorEndpoint) ? AppSettings.Default.SimulatorEndpoint : settings.SimulatorEndpoint
+        };
+
+        File.WriteAllText(Path.Combine(runtimeRoot, "settings.json"), JsonSerializer.Serialize(normalized, JsonOptions));
     }
 }

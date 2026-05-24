@@ -10,10 +10,12 @@ The simulator contract is separated so the WPF client can later talk to an exter
 ```text
 starlink/
 ├─ StarlinkApp.sln
+├─ scripts/
 ├─ src/
 │  ├─ StarlinkApp/
 │  ├─ StarlinkApp.Contracts/
-│  └─ StarlinkApp.Simulation/
+│  ├─ StarlinkApp.Simulation/
+│  └─ StarlinkSimulator/
 └─ tests/
    └─ StarlinkApp.Tests/
 ```
@@ -24,6 +26,18 @@ starlink/
 dotnet build StarlinkApp.sln --no-restore
 dotnet test StarlinkApp.sln --no-build
 dotnet run --project .\src\StarlinkApp\StarlinkApp.csproj
+```
+
+Run the optional simulator server:
+
+```powershell
+dotnet run --project .\src\StarlinkSimulator\StarlinkSimulator.csproj
+```
+
+Run publish smoke:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\smoke-publish.ps1
 ```
 
 ## Runtime Files
@@ -41,6 +55,17 @@ Templates are copied to the output folder:
 
 - `settings.template.json`
 - `scenarios.default.json`
+
+`settings.json` can select the simulator transport:
+
+```json
+{
+  "simulatorMode": "InProcess",
+  "simulatorEndpoint": "tcp://127.0.0.1:5517"
+}
+```
+
+Use `simulatorMode: "Tcp"` after starting `StarlinkSimulator`.
 
 ## Logging
 
@@ -63,11 +88,14 @@ The current slice includes:
 - `AdvancedSpeed`
 - `Network`
 - `Settings`
+- `Support`
 - `settings.json` / `scenarios.json` fallback behavior
+- `settings.json` save/update flow
 - obstruction, speed test, and network state snapshots
 - page-specific view models
 - `SimulationEngine`
-- TCP simulator adapter skeleton with in-process fallback
+- TCP simulator adapter and standalone `StarlinkSimulator` process
+- publish smoke script
 - simulator contract tests
 
-Next implementation candidates are Settings save/update flow, Support/Feedback pages, and a real TCP simulator server process.
+Next implementation candidates are richer chart visuals, a more reference-like obstruction heatmap, persisted device actions, and UDP telemetry streaming.

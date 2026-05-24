@@ -42,7 +42,12 @@ public sealed class InProcessSimulatorClientTests
         Assert.True(ack.Accepted);
         Assert.Equal("speed.run", ack.Command);
         Assert.Equal(ConnectionState.Online, ack.Snapshot.ConnectionState);
-        Assert.Equal(SpeedTestStatus.Complete, ack.Snapshot.SpeedTest.Status);
+        Assert.Equal(SpeedTestStatus.Running, ack.Snapshot.SpeedTest.Status);
+
+        simulator.GetSnapshot();
+        var completedSnapshot = simulator.GetSnapshot();
+
+        Assert.Equal(SpeedTestStatus.Complete, completedSnapshot.SpeedTest.Status);
     }
 
     [Fact]
@@ -56,6 +61,14 @@ public sealed class InProcessSimulatorClientTests
         Assert.True(ack.Accepted);
         Assert.Equal("obstruction.scan", ack.Command);
         Assert.Equal("obstructed", ack.Snapshot.BackgroundHint);
-        Assert.Equal(100, ack.Snapshot.Obstruction.ScanProgressPercent);
+        Assert.InRange(ack.Snapshot.Obstruction.ScanProgressPercent, 1, 99);
+
+        TelemetrySnapshot completedSnapshot = ack.Snapshot;
+        for (var i = 0; i < 8; i++)
+        {
+            completedSnapshot = simulator.GetSnapshot();
+        }
+
+        Assert.Equal(100, completedSnapshot.Obstruction.ScanProgressPercent);
     }
 }

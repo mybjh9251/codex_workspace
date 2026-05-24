@@ -12,6 +12,7 @@ public sealed class AdvancedSpeedPageViewModel : ViewModelBase
     private string _latencyText = "--";
     private string _jitterText = "--";
     private IReadOnlyList<SpeedSample> _samples = [];
+    private IReadOnlyList<SpeedSampleBarViewModel> _sampleBars = [];
     private IReadOnlyList<SpeedSegment> _segments = [];
 
     public AdvancedSpeedPageViewModel(ICommand runAdvancedSpeedTestCommand)
@@ -63,6 +64,12 @@ public sealed class AdvancedSpeedPageViewModel : ViewModelBase
         private set => SetProperty(ref _samples, value);
     }
 
+    public IReadOnlyList<SpeedSampleBarViewModel> SampleBars
+    {
+        get => _sampleBars;
+        private set => SetProperty(ref _sampleBars, value);
+    }
+
     public IReadOnlyList<SpeedSegment> Segments
     {
         get => _segments;
@@ -85,6 +92,17 @@ public sealed class AdvancedSpeedPageViewModel : ViewModelBase
         LatencyText = speedTest.LatencyMs > 0 ? $"{speedTest.LatencyMs} ms" : "--";
         JitterText = speedTest.JitterMs > 0 ? $"{speedTest.JitterMs} ms jitter" : "--";
         Samples = speedTest.Samples;
+        SampleBars = speedTest.Samples
+            .Select(sample => new SpeedSampleBarViewModel(
+                sample.Label,
+                Math.Clamp(sample.DownloadMbps * 1.2, 2, 175),
+                Math.Clamp(sample.UploadMbps * 5, 2, 175)))
+            .ToArray();
         Segments = speedTest.Segments;
     }
 }
+
+public sealed record SpeedSampleBarViewModel(
+    string Label,
+    double DownloadBarWidth,
+    double UploadBarWidth);

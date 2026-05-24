@@ -4,11 +4,15 @@ public sealed record AppSettings(
     string AccountName,
     string DefaultScenarioKey,
     int RefreshIntervalMs,
-    bool EnableFileLogging)
+    bool EnableFileLogging,
+    string SimulatorMode,
+    string SimulatorEndpoint)
 {
     public static AppSettings Default { get; } = new(
         "Starlink",
         "online",
         1000,
-        true);
+        true,
+        "InProcess",
+        "tcp://127.0.0.1:5517");
 }

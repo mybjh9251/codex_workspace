@@ -9,6 +9,9 @@
     <Color x:Key="MutedBorderColor">#3A3A3A</Color>
     <Color x:Key="OnlineColor">#62E67A</Color>
     <Color x:Key="StarlinkBlueColor">#3E85FF</Color>
+    <Color x:Key="ObstructionClearColor">#163127</Color>
+    <Color x:Key="ObstructionPartialColor">#A97926</Color>
+    <Color x:Key="ObstructionHeavyColor">#D44B3A</Color>
 
     <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource AppBackgroundColor}" />
     <SolidColorBrush x:Key="PhoneBackgroundBrush" Color="{StaticResource PhoneBackgroundColor}" />
@@ -19,6 +22,9 @@
     <SolidColorBrush x:Key="MutedBorderBrush" Color="{StaticResource MutedBorderColor}" />
     <SolidColorBrush x:Key="OnlineBrush" Color="{StaticResource OnlineColor}" />
     <SolidColorBrush x:Key="StarlinkBlueBrush" Color="{StaticResource StarlinkBlueColor}" />
+    <SolidColorBrush x:Key="ObstructionClearBrush" Color="{StaticResource ObstructionClearColor}" />
+    <SolidColorBrush x:Key="ObstructionPartialBrush" Color="{StaticResource ObstructionPartialColor}" />
+    <SolidColorBrush x:Key="ObstructionHeavyBrush" Color="{StaticResource ObstructionHeavyColor}" />
 
     <LinearGradientBrush x:Key="BeamGlowBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#F7F7F2" Offset="0" />

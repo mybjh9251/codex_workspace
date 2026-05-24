@@ -41,6 +41,9 @@
                     <TextBlock Text="{Binding RefreshIntervalText}"
                                Margin="0,8,0,0"
                                Style="{StaticResource CaptionTextStyle}" />
+                    <TextBlock Text="{Binding TransitionStatusText}"
+                               Margin="0,8,0,0"
+                               Style="{StaticResource CaptionTextStyle}" />
                 </StackPanel>
 
                 <ItemsControl Grid.Row="1"
@@ -121,6 +124,8 @@
                                        Visibility="{Binding DataContext.IsNetworkPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     <pages:SettingsPage DataContext="{Binding Settings}"
                                         Visibility="{Binding DataContext.IsSettingsPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:SupportPage DataContext="{Binding Support}"
+                                       Visibility="{Binding DataContext.IsSupportPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </Grid>
             </Border>
         </Grid>
