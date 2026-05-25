@@ -11,7 +11,7 @@ public sealed record AppSettings(
     public static AppSettings Default { get; } = new(
         "Starlink",
         "online",
-        1000,
+        500,
         true,
         "InProcess",
         "tcp://127.0.0.1:5517");

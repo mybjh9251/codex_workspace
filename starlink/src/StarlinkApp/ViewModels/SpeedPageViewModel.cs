@@ -6,7 +6,7 @@ namespace StarlinkApp.ViewModels;
 public sealed class SpeedPageViewModel : ViewModelBase
 {
     private string _downloadText = "0 Mbps";
-    private string _uploadText = "0 Mbps upload";
+    private string _uploadText = "0 Mbps";
     private string _latencyText = "--";
     private string _speedTargetText = "No active target";
     private double _downloadBarWidth;
@@ -58,7 +58,7 @@ public sealed class SpeedPageViewModel : ViewModelBase
     public void Update(TelemetrySnapshot snapshot)
     {
         DownloadText = $"{snapshot.SpeedTest.DownloadMbps:0} Mbps";
-        UploadText = $"{snapshot.SpeedTest.UploadMbps:0} Mbps upload";
+        UploadText = $"{snapshot.SpeedTest.UploadMbps:0} Mbps";
         LatencyText = snapshot.SpeedTest.LatencyMs > 0 ? $"{snapshot.SpeedTest.LatencyMs} ms" : "--";
         SpeedTargetText = snapshot.SpeedTest.TargetDeviceName;
         DownloadBarWidth = Math.Clamp(snapshot.SpeedTest.DownloadMbps, 0, 180);

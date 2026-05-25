@@ -42,6 +42,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         [
             new PageNavigationItem("home", "Home", "Connection status"),
             new PageNavigationItem("setup", "Setup", "Install flow"),
+            new PageNavigationItem("statistics", "Statistics", "Signal and throughput"),
             new PageNavigationItem("obstructions", "Obstructions", "Sky view"),
             new PageNavigationItem("speed", "Speed", "Speed test"),
             new PageNavigationItem("advancedSpeed", "Advanced Speed", "Network path"),
@@ -52,6 +53,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
         Home = new HomePageViewModel(NavigateCommand, RunSpeedTestCommand, RetryConnectionCommand);
         Setup = new SetupPageViewModel(ContinueSetupCommand);
+        Statistics = new StatisticsPageViewModel();
         Obstructions = new ObstructionsPageViewModel(CheckObstructionsCommand);
         Speed = new SpeedPageViewModel(RunAdvancedSpeedTestCommand);
         AdvancedSpeed = new AdvancedSpeedPageViewModel(RunAdvancedSpeedTestCommand);
@@ -99,6 +101,8 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public SetupPageViewModel Setup { get; }
 
+    public StatisticsPageViewModel Statistics { get; }
+
     public ObstructionsPageViewModel Obstructions { get; }
 
     public SpeedPageViewModel Speed { get; }
@@ -126,6 +130,8 @@ public sealed class MainWindowViewModel : ViewModelBase
     public bool IsHomePageVisible => _currentPageKey == "home";
 
     public bool IsSetupPageVisible => _currentPageKey == "setup";
+
+    public bool IsStatisticsPageVisible => _currentPageKey == "statistics";
 
     public bool IsObstructionsPageVisible => _currentPageKey == "obstructions";
 
@@ -172,6 +178,7 @@ public sealed class MainWindowViewModel : ViewModelBase
         OnPropertyChanged(nameof(CurrentPageDescription));
         OnPropertyChanged(nameof(IsHomePageVisible));
         OnPropertyChanged(nameof(IsSetupPageVisible));
+        OnPropertyChanged(nameof(IsStatisticsPageVisible));
         OnPropertyChanged(nameof(IsObstructionsPageVisible));
         OnPropertyChanged(nameof(IsSpeedPageVisible));
         OnPropertyChanged(nameof(IsAdvancedSpeedPageVisible));
@@ -233,6 +240,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     {
         Home.Update(_snapshot);
         Setup.Update(_snapshot);
+        Statistics.Update(_snapshot);
         Obstructions.Update(_snapshot);
         Speed.Update(_snapshot);
         AdvancedSpeed.Update(_snapshot);

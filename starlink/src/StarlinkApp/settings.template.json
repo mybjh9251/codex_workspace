@@ -1,7 +1,7 @@
 {
   "accountName": "Starlink",
   "defaultScenarioKey": "online",
-  "refreshIntervalMs": 1000,
+  "refreshIntervalMs": 500,
   "enableFileLogging": true,
   "simulatorMode": "InProcess",
   "simulatorEndpoint": "tcp://127.0.0.1:5517"

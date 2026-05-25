@@ -23,9 +23,15 @@
 
         <ScrollViewer Grid.Row="1"
                       Margin="28,40,28,20"
-                      VerticalScrollBarVisibility="Auto">
+                      VerticalScrollBarVisibility="Hidden">
             <StackPanel>
+                <Button Content="&lt; Home"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="home"
+                        Style="{StaticResource BackButtonStyle}" />
+
                 <TextBlock Text="ADVANCED SPEED"
+                           Margin="0,18,0,0"
                            Style="{StaticResource PhoneCaptionTextStyle}" />
                 <TextBlock Text="{Binding StatusText}"
                            Margin="0,10,0,0"

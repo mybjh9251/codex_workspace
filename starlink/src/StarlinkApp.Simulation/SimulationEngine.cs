@@ -34,10 +34,6 @@ public sealed class SimulationEngine
         var scenario = FindScenario(_scenarioKey);
         _speedPulse = (_speedPulse + 0.15) % 1;
 
-        var downloadOffset = scenario.ConnectionState == ConnectionState.Online
-            ? Math.Sin(_speedPulse * Math.PI * 2) * 4
-            : 0;
-
         if (_scanProgress is > 0 and < 100)
         {
             _scanProgress = Math.Min(100, _scanProgress + 12);
@@ -52,7 +48,7 @@ public sealed class SimulationEngine
             }
         }
 
-        return CreateSnapshot(scenario, downloadOffset);
+        return CreateSnapshot(scenario, CreateRuntimeMetrics(scenario));
     }
 
     public TelemetrySnapshot SetScenario(string scenarioKey)
@@ -68,7 +64,7 @@ public sealed class SimulationEngine
         {
             _speedStatus = SpeedTestStatus.Running;
             _speedTicksRemaining = 2;
-            var snapshot = CreateOnlineSnapshot(6);
+            var snapshot = CreateOnlineSnapshot(6, 1.2);
 
             return new CommandAck(request.Command, true, "Speed test started.", snapshot);
         }
@@ -77,7 +73,7 @@ public sealed class SimulationEngine
         {
             _speedStatus = SpeedTestStatus.Running;
             _speedTicksRemaining = 2;
-            var snapshot = CreateOnlineSnapshot(11);
+            var snapshot = CreateOnlineSnapshot(11, 2.1);
 
             return new CommandAck(request.Command, true, "Advanced speed test started.", snapshot);
         }
@@ -119,19 +115,18 @@ public sealed class SimulationEngine
             ?? _scenarios[0];
     }
 
-    private TelemetrySnapshot CreateOnlineSnapshot(double downloadOffset)
+    private TelemetrySnapshot CreateOnlineSnapshot(double downloadBoost, double uploadBoost)
     {
         var scenario = _scenarios.FirstOrDefault(s => s.ConnectionState == ConnectionState.Online) ?? _scenarios[0];
         _scenarioKey = scenario.Key;
-        return CreateSnapshot(scenario, downloadOffset);
+        return CreateSnapshot(scenario, CreateRuntimeMetrics(scenario, downloadBoost, uploadBoost));
     }
 
-    private TelemetrySnapshot CreateSnapshot(ScenarioDefinition scenario, double downloadOffset)
+    private TelemetrySnapshot CreateSnapshot(ScenarioDefinition scenario, RuntimeMetrics metrics)
     {
-        var roundedDownload = Math.Max(0, Math.Round(scenario.DownloadMbps + downloadOffset, 1));
-        var obstruction = CreateObstruction(scenario);
-        var speed = CreateSpeedTest(scenario, roundedDownload);
-        var network = CreateNetwork(scenario);
+        var obstruction = CreateObstruction(scenario, metrics.ObstructedPercent);
+        var speed = CreateSpeedTest(scenario, metrics);
+        var network = CreateNetwork(scenario, metrics);
 
         return scenario.ConnectionState switch
         {
@@ -140,11 +135,11 @@ public sealed class SimulationEngine
                 scenario.Key,
                 _accountName,
                 scenario.ConnectionState,
-                roundedDownload,
-                scenario.UploadMbps,
-                scenario.LatencyMs,
+                metrics.DownloadMbps,
+                metrics.UploadMbps,
+                metrics.LatencyMs,
                 scenario.DeviceCount,
-                obstruction.Severity == ObstructionSeverity.Clear ? 99.88 : 96.21,
+                metrics.PingSuccessPercent,
                 "Online",
                 $"{network.ConnectedDeviceCount} devices connected",
                 "Run speed test",
@@ -189,16 +184,112 @@ public sealed class SimulationEngine
         };
     }
 
-    private ObstructionSnapshot CreateObstruction(ScenarioDefinition scenario)
+    private RuntimeMetrics CreateRuntimeMetrics(
+        ScenarioDefinition scenario,
+        double downloadBoost = 0,
+        double uploadBoost = 0)
+    {
+        if (scenario.ConnectionState != ConnectionState.Online)
+        {
+            return new RuntimeMetrics(0, 0, 0, 0, 0, CreateObstructedPercent(scenario), 0, 0);
+        }
+
+        var download = CreateVariableMetric(scenario.DownloadMbps, 0.035, 2.0, 0, downloadBoost);
+        var upload = CreateVariableMetric(scenario.UploadMbps, 0.08, 0.8, 0.37, uploadBoost);
+        var latency = CreateVariableLatency(scenario.LatencyMs);
+        var jitter = CreateVariableJitter(latency);
+        var pingSuccess = CreateVariablePingSuccess(scenario);
+        var obstructedPercent = CreateObstructedPercent(scenario);
+        var officeLaptopUsage = CreateVariableMetric(14, 0.18, 1.2, 0.68);
+        var tvUsage = CreateVariableMetric(21, 0.16, 1.5, 0.91);
+
+        return new RuntimeMetrics(
+            download,
+            upload,
+            latency,
+            jitter,
+            pingSuccess,
+            obstructedPercent,
+            officeLaptopUsage,
+            tvUsage);
+    }
+
+    private double CreateVariableMetric(
+        double scenarioValue,
+        double amplitudeRatio,
+        double minimumAmplitude,
+        double phaseOffset,
+        double boost = 0)
+    {
+        if (scenarioValue <= 0)
+        {
+            return 0;
+        }
+
+        var amplitude = Math.Max(minimumAmplitude, scenarioValue * amplitudeRatio);
+        var wave = Math.Sin((_speedPulse + phaseOffset) * Math.PI * 2);
+
+        return Math.Max(0, Math.Round(scenarioValue + boost + (wave * amplitude), 1));
+    }
+
+    private int CreateVariableLatency(int scenarioLatencyMs)
+    {
+        if (scenarioLatencyMs <= 0)
+        {
+            return 0;
+        }
+
+        var amplitude = Math.Max(2, scenarioLatencyMs * 0.1);
+        var wave = Math.Cos((_speedPulse + 0.17) * Math.PI * 2);
+
+        return Math.Max(1, (int)Math.Round(scenarioLatencyMs + (wave * amplitude)));
+    }
+
+    private int CreateVariableJitter(int latencyMs)
+    {
+        if (latencyMs <= 0)
+        {
+            return 0;
+        }
+
+        var baseJitter = Math.Max(1, latencyMs / 6.0);
+        var wave = Math.Sin((_speedPulse + 0.54) * Math.PI * 2);
+
+        return Math.Max(1, (int)Math.Round(baseJitter + (wave * 1.4)));
+    }
+
+    private double CreateVariablePingSuccess(ScenarioDefinition scenario)
+    {
+        var isObstructed = scenario.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase);
+        var baseline = isObstructed ? 96.2 : 99.86;
+        var amplitude = isObstructed ? 0.55 : 0.08;
+        var wave = Math.Sin((_speedPulse + 0.22) * Math.PI * 2);
+
+        return Math.Clamp(Math.Round(baseline + (wave * amplitude), 2), 0, 99.99);
+    }
+
+    private double CreateObstructedPercent(ScenarioDefinition scenario)
+    {
+        var isObstructed = scenario.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase);
+        if (!isObstructed)
+        {
+            return 0;
+        }
+
+        var wave = Math.Sin((_speedPulse + 0.41) * Math.PI * 2);
+
+        return Math.Max(0, Math.Round(7.4 + (wave * 0.65), 1));
+    }
+
+    private ObstructionSnapshot CreateObstruction(ScenarioDefinition scenario, double obstructedPercent)
     {
         var isObstructed = scenario.BackgroundHint.Equals("obstructed", StringComparison.OrdinalIgnoreCase);
         var severity = isObstructed ? ObstructionSeverity.Partial : ObstructionSeverity.Clear;
-        var percent = isObstructed ? 7.4 : 0;
         var cells = CreateObstructionCells(isObstructed);
 
         return new ObstructionSnapshot(
             severity,
-            percent,
+            obstructedPercent,
             _scanProgress,
             _scanProgress == 100 ? "Just now" : "Not scanned this session",
             isObstructed ? "Move Starlink for a wider clear area." : "Starlink has a clear view of the sky.",
@@ -221,22 +312,24 @@ public sealed class SimulationEngine
         return cells;
     }
 
-    private SpeedTestSnapshot CreateSpeedTest(ScenarioDefinition scenario, double downloadMbps)
+    private SpeedTestSnapshot CreateSpeedTest(ScenarioDefinition scenario, RuntimeMetrics metrics)
     {
         var isOnline = scenario.ConnectionState == ConnectionState.Online;
         var status = isOnline ? _speedStatus : SpeedTestStatus.Idle;
-        var upload = isOnline ? scenario.UploadMbps : 0;
-        var latency = isOnline ? scenario.LatencyMs : 0;
+        var download = isOnline ? metrics.DownloadMbps : 0;
+        var upload = isOnline ? metrics.UploadMbps : 0;
+        var latency = isOnline ? metrics.LatencyMs : 0;
+        var jitter = isOnline ? metrics.JitterMs : 0;
 
         return new SpeedTestSnapshot(
             status,
             isOnline ? "This device" : "No active target",
-            isOnline ? downloadMbps : 0,
+            download,
             upload,
             latency,
-            isOnline ? Math.Max(1, latency / 5) : 0,
-            CreateSpeedSamples(downloadMbps, upload),
-            CreateSpeedSegments(downloadMbps, upload, latency));
+            jitter,
+            CreateSpeedSamples(download, upload),
+            CreateSpeedSegments(download, upload, latency));
     }
 
     private static IReadOnlyList<SpeedSample> CreateSpeedSamples(double downloadMbps, double uploadMbps)
@@ -261,7 +354,7 @@ public sealed class SimulationEngine
         ];
     }
 
-    private static NetworkSnapshot CreateNetwork(ScenarioDefinition scenario)
+    private static NetworkSnapshot CreateNetwork(ScenarioDefinition scenario, RuntimeMetrics metrics)
     {
         if (scenario.ConnectionState != ConnectionState.Online)
         {
@@ -275,14 +368,30 @@ public sealed class SimulationEngine
 
         if (scenario.DeviceCount > 1)
         {
-            devices.Add(new("Office laptop", "Wi-Fi", scenario.BackgroundHint == "obstructed" ? "Good" : "Excellent", "14 Mbps", true, "48m"));
+            devices.Add(new(
+                "Office laptop",
+                "Wi-Fi",
+                scenario.BackgroundHint == "obstructed" ? "Good" : "Excellent",
+                $"{metrics.OfficeLaptopUsageMbps:0.0} Mbps",
+                true,
+                "48m"));
         }
 
         if (scenario.DeviceCount > 2)
         {
-            devices.Add(new("Living room TV", "Wi-Fi", "Good", "Streaming", true, "1h 02m"));
+            devices.Add(new("Living room TV", "Wi-Fi", "Good", $"Streaming {metrics.TvUsageMbps:0.0} Mbps", true, "1h 02m"));
         }
 
         return new NetworkSnapshot(devices.Count, $"{devices.Count} devices connected", devices);
     }
+
+    private sealed record RuntimeMetrics(
+        double DownloadMbps,
+        double UploadMbps,
+        int LatencyMs,
+        int JitterMs,
+        double PingSuccessPercent,
+        double ObstructedPercent,
+        double OfficeLaptopUsageMbps,
+        double TvUsageMbps);
 }

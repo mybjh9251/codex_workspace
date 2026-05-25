@@ -47,6 +47,44 @@ public sealed class SimulationEngineTests
     }
 
     [Fact]
+    public void OnlineSnapshotLatencyVariesAcrossRefreshes()
+    {
+        var engine = new SimulationEngine(AppSettings.Default, SimulatorConfigurationLoader.CreateDefaultScenarios());
+
+        var latencies = Enumerable
+            .Range(0, 5)
+            .Select(_ => engine.GetSnapshot().LatencyMs)
+            .ToArray();
+
+        Assert.True(latencies.Distinct().Count() > 1);
+        Assert.All(latencies, latency => Assert.InRange(latency, 28, 34));
+    }
+
+    [Fact]
+    public void OnlineSnapshotVariesScenarioBasedRuntimeMetrics()
+    {
+        var engine = new SimulationEngine(AppSettings.Default, SimulatorConfigurationLoader.CreateDefaultScenarios());
+
+        var snapshots = Enumerable
+            .Range(0, 6)
+            .Select(_ => engine.GetSnapshot())
+            .ToArray();
+
+        var uploadValues = snapshots.Select(snapshot => snapshot.UploadMbps).ToArray();
+        var speedTestUploadValues = snapshots.Select(snapshot => snapshot.SpeedTest.UploadMbps).ToArray();
+        var pingValues = snapshots.Select(snapshot => snapshot.PingSuccessPercent).ToArray();
+        var officeUsageValues = snapshots
+            .Select(snapshot => snapshot.Network.Devices.First(device => device.Name == "Office laptop").UsageText)
+            .ToArray();
+
+        Assert.True(uploadValues.Distinct().Count() > 1);
+        Assert.True(speedTestUploadValues.Distinct().Count() > 1);
+        Assert.True(pingValues.Distinct().Count() > 1);
+        Assert.True(officeUsageValues.Distinct().Count() > 1);
+        Assert.All(uploadValues, upload => Assert.InRange(upload, 14, 22));
+    }
+
+    [Fact]
     public void TcpSimulatorClientFallsBackUntilWireProtocolExists()
     {
         var client = new TcpSimulatorClient(

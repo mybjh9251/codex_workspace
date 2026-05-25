@@ -116,7 +116,9 @@
                     </Grid>
                 </Button>
 
-                <Border Style="{StaticResource NavigationRowStyle}">
+                <Button Command="{Binding NavigateCommand}"
+                        CommandParameter="statistics"
+                        Style="{StaticResource NavigationRowButtonStyle}">
                     <Grid>
                         <TextBlock Text="Statistics"
                                    Style="{StaticResource RowTitleTextStyle}" />
@@ -124,7 +126,7 @@
                                    Text=">"
                                    Style="{StaticResource RowTitleTextStyle}" />
                     </Grid>
-                </Border>
+                </Button>
 
                 <Button Command="{Binding NavigateCommand}"
                         CommandParameter="network"

@@ -11,6 +11,7 @@
                 <ResourceDictionary Source="Themes/Controls/Buttons.xaml" />
                 <ResourceDictionary Source="Themes/Controls/Cards.xaml" />
                 <ResourceDictionary Source="Themes/Controls/Rows.xaml" />
+                <ResourceDictionary Source="Themes/Controls/Inputs.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
         </ResourceDictionary>

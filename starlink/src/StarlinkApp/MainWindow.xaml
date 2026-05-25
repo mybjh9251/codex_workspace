@@ -109,11 +109,13 @@
             <Border Width="420"
                     Height="790"
                     Style="{StaticResource PhoneShellStyle}">
-                <Grid>
+                <Grid Margin="10,12,10,12">
                     <pages:HomePage DataContext="{Binding Home}"
                                     Visibility="{Binding DataContext.IsHomePageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     <pages:SetupPage DataContext="{Binding Setup}"
                                      Visibility="{Binding DataContext.IsSetupPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    <pages:StatisticsPage DataContext="{Binding Statistics}"
+                                          Visibility="{Binding DataContext.IsStatisticsPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     <pages:ObstructionsPage DataContext="{Binding Obstructions}"
                                             Visibility="{Binding DataContext.IsObstructionsPageVisible, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                     <pages:SpeedPage DataContext="{Binding Speed}"
