@@ -1,0 +1,268 @@
+<Window x:Class="Jung.Gpredict.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:Jung.Gpredict.ViewModels"
+        Title="jung_gpredict"
+        Width="1280"
+        Height="780"
+        MinWidth="980"
+        MinHeight="620"
+        Background="#F4F6F8"
+        AllowDrop="True"
+        Drop="Window_Drop"
+        DragOver="Window_DragOver">
+  <Window.DataContext>
+    <vm:MainViewModel/>
+  </Window.DataContext>
+  <Window.Resources>
+    <vm:BindingProxy x:Key="VmProxy" Data="{Binding}"/>
+  </Window.Resources>
+
+  <Grid Margin="18">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="280"/>
+      <ColumnDefinition Width="14"/>
+      <ColumnDefinition Width="*"/>
+      <ColumnDefinition Width="14"/>
+      <ColumnDefinition Width="240"/>
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="14"/>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+
+    <Border Grid.ColumnSpan="5"
+            Padding="16"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FFFFFF">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel>
+          <TextBlock Text="jung_gpredict"
+                     FontSize="24"
+                     FontWeight="SemiBold"
+                     Foreground="#172033"/>
+          <TextBlock Text="{Binding StatusMessage}"
+                     Margin="0,4,0,0"
+                     Foreground="#475569"/>
+        </StackPanel>
+        <Button Grid.Column="1"
+                Content="TLE 파일 열기"
+                Command="{Binding BrowseTleCommand}"/>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="2"
+            Padding="14"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FFFFFF">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="12"/>
+          <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TextBlock Text="Module"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="#172033"/>
+        <TabControl Grid.Row="2">
+          <TabItem Header="Ground">
+            <ListBox ItemsSource="{Binding GroundStations}"
+                     SelectedItem="{Binding SelectedGroundStation}"
+                     DisplayMemberPath="Name"
+                     BorderThickness="0"/>
+          </TabItem>
+          <TabItem Header="Satellites">
+            <ListBox ItemsSource="{Binding SatelliteSelections}"
+                     BorderThickness="0">
+              <ListBox.ItemTemplate>
+                <DataTemplate>
+                  <CheckBox Content="{Binding SatelliteName}"
+                            IsChecked="{Binding IsIncluded}"/>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+          </TabItem>
+        </TabControl>
+      </Grid>
+    </Border>
+
+    <Border Grid.Column="2"
+            Grid.Row="2"
+            Padding="14"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FFFFFF">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="12"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="12"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <DockPanel>
+          <TextBlock Text="위성 패스 예측"
+                     FontSize="16"
+                     FontWeight="SemiBold"
+                     Foreground="#172033"/>
+          <TextBlock DockPanel.Dock="Right"
+                     Text="{Binding LoadedSatelliteSummary}"
+                     Foreground="#64748B"/>
+        </DockPanel>
+
+        <DataGrid Grid.Row="2"
+                  ItemsSource="{Binding Passes}"
+                  SelectedItem="{Binding SelectedPass}"
+                  AutoGenerateColumns="False"
+                  IsReadOnly="True"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  GridLinesVisibility="Horizontal"
+                  RowHeaderWidth="0"
+                  BorderBrush="#CBD5E1">
+          <DataGrid.Columns>
+            <DataGridTextColumn Header="Satellite" Binding="{Binding SatelliteName}" Visibility="{Binding Data.SatelliteColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Pass" Binding="{Binding PassIndex}" Visibility="{Binding Data.PassIndexColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="AOS (KST)" Binding="{Binding AosLocalText}" Visibility="{Binding Data.AosColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="TCA (KST)" Binding="{Binding TcaLocalText}" Visibility="{Binding Data.TcaColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="LOS (KST)" Binding="{Binding LosLocalText}" Visibility="{Binding Data.LosColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Duration" Binding="{Binding DurationText}" Visibility="{Binding Data.DurationColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Max El" Binding="{Binding MaxElevationText}" Visibility="{Binding Data.MaxElevationColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Az @ AOS" Binding="{Binding AosAzimuthText}" Visibility="{Binding Data.AosAzimuthColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Az @ Max" Binding="{Binding MaxElevationAzimuthText}" Visibility="{Binding Data.MaxElevationAzimuthColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Az @ LOS" Binding="{Binding LosAzimuthText}" Visibility="{Binding Data.LosAzimuthColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Range @ Max" Binding="{Binding RangeKmText}" Visibility="{Binding Data.RangeColumnVisibility, Source={StaticResource VmProxy}}"/>
+            <DataGridTextColumn Header="Range Rate" Binding="{Binding RangeRateText}" Visibility="{Binding Data.RangeRateColumnVisibility, Source={StaticResource VmProxy}}"/>
+          </DataGrid.Columns>
+        </DataGrid>
+
+        <Border Grid.Row="4"
+                Padding="12"
+                BorderBrush="#E2E8F0"
+                BorderThickness="1"
+                CornerRadius="6"
+                Background="#F8FAFC">
+          <Grid DataContext="{Binding SelectedPass}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="1.3*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="{Binding SatelliteName}"
+                         FontWeight="SemiBold"
+                         Foreground="#172033"/>
+              <TextBlock Text="{Binding DurationText}"
+                         Margin="0,3,0,0"
+                         Foreground="#64748B"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1">
+              <TextBlock Text="TCA"
+                         Foreground="#64748B"/>
+              <TextBlock Text="{Binding TcaLocalText}"
+                         FontWeight="SemiBold"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2">
+              <TextBlock Text="Max El / Az"
+                         Foreground="#64748B"/>
+              <TextBlock FontWeight="SemiBold">
+                <Run Text="{Binding MaxElevationText}"/>
+                <Run Text=" / "/>
+                <Run Text="{Binding MaxElevationAzimuthText}"/>
+              </TextBlock>
+            </StackPanel>
+            <StackPanel Grid.Column="3">
+              <TextBlock Text="Range"
+                         Foreground="#64748B"/>
+              <TextBlock FontWeight="SemiBold">
+                <Run Text="{Binding RangeKmText}"/>
+                <Run Text=" / "/>
+                <Run Text="{Binding RangeRateText}"/>
+              </TextBlock>
+            </StackPanel>
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Border Grid.Column="4"
+            Grid.Row="2"
+            Padding="14"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FFFFFF">
+      <StackPanel>
+        <TextBlock Text="표시 설정"
+                   FontSize="16"
+                   FontWeight="SemiBold"
+                   Foreground="#172033"/>
+        <TextBlock Text="예측 조건"
+                   Margin="0,14,0,6"
+                   Foreground="#64748B"/>
+        <TextBlock Text="기간(days)"
+                   Foreground="#334155"/>
+        <TextBox Text="{Binding PredictionDays, UpdateSourceTrigger=LostFocus}"
+                 Margin="0,3,0,8"/>
+        <TextBlock Text="Pass 수"
+                   Foreground="#334155"/>
+        <TextBox Text="{Binding MaxPassesPerSatellite, UpdateSourceTrigger=LostFocus}"
+                 Margin="0,3,0,8"/>
+        <TextBlock Foreground="#334155">
+          <Run Text="최소 고도 "/>
+          <Run Text="{Binding MinElevationDeg, StringFormat={}{0:F0}}"/>
+          <Run Text=" deg"/>
+        </TextBlock>
+        <Slider Minimum="0"
+                Maximum="45"
+                TickFrequency="5"
+                IsSnapToTickEnabled="True"
+                Value="{Binding MinElevationDeg}"
+                Margin="0,2,0,8"/>
+        <Button Content="다시 계산"
+                Command="{Binding RecalculateCommand}"
+                Margin="0,0,0,10"/>
+        <TextBlock Text="테이블 컬럼"
+                   Margin="0,14,0,6"
+                   Foreground="#64748B"/>
+        <CheckBox Content="Satellite" IsChecked="{Binding ShowSatellite}"/>
+        <CheckBox Content="Pass" IsChecked="{Binding ShowPassIndex}"/>
+        <CheckBox Content="AOS" IsChecked="{Binding ShowAos}"/>
+        <CheckBox Content="TCA" IsChecked="{Binding ShowTca}"/>
+        <CheckBox Content="LOS" IsChecked="{Binding ShowLos}"/>
+        <CheckBox Content="Duration" IsChecked="{Binding ShowDuration}"/>
+        <CheckBox Content="Max El" IsChecked="{Binding ShowMaxElevation}"/>
+        <CheckBox Content="Az @ AOS" IsChecked="{Binding ShowAosAzimuth}"/>
+        <CheckBox Content="Az @ Max" IsChecked="{Binding ShowMaxElevationAzimuth}"/>
+        <CheckBox Content="Az @ LOS" IsChecked="{Binding ShowLosAzimuth}"/>
+        <CheckBox Content="Range @ Max" IsChecked="{Binding ShowRange}"/>
+        <CheckBox Content="Range Rate" IsChecked="{Binding ShowRangeRate}"/>
+      </StackPanel>
+    </Border>
+
+    <Border Grid.Row="3"
+            Grid.ColumnSpan="5"
+            Margin="0,14,0,0"
+            Padding="16"
+            BorderBrush="#CBD5E1"
+            BorderThickness="1"
+            CornerRadius="8"
+            Background="#FFFFFF">
+      <TextBlock Text="TLE_Download의 TLE_*.txt 파일을 이 창에 끌어 놓으면 자동으로 예측 테이블이 갱신됩니다."
+                 Foreground="#475569"/>
+    </Border>
+  </Grid>
+</Window>
