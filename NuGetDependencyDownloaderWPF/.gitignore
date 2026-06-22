@@ -1,0 +1,11 @@
+.vs/
+bin/
+obj/
+packages/
+output/
+downloads/
+*.user
+*.suo
+*.nupkg
+*.log
+*.tmp
