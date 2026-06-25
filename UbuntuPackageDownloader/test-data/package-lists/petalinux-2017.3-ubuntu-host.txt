@@ -1,0 +1,37 @@
+# Xilinx PetaLinux 2017.3 Ubuntu host requirement package smoke list
+# Target test baseline: Ubuntu 16.04 xenial, amd64, main universe, release updates security
+tofrodos
+iproute2
+gawk
+gcc
+git
+make
+net-tools
+libncurses5-dev
+tftpd
+zlib1g-dev
+libssl-dev
+flex
+bison
+libselinux1
+gnupg
+wget
+diffstat
+chrpath
+socat
+xterm
+autoconf
+libtool
+tar
+unzip
+texinfo
+gcc-multilib
+build-essential
+libsdl1.2-dev
+libglib2.0-dev
+screen
+pax
+gzip
+cpio
+python
+python3

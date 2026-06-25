@@ -1,0 +1,33 @@
+# AMD PetaLinux 2025.1 Ubuntu host requirement package smoke list
+# Target test baseline: Ubuntu 22.04 jammy, amd64, main universe, release updates security
+gawk
+wget
+git
+diffstat
+unzip
+texinfo
+gcc
+build-essential
+chrpath
+socat
+cpio
+python3
+python3-pip
+python3-pexpect
+xz-utils
+debianutils
+iputils-ping
+python3-git
+python3-jinja2
+libegl1-mesa
+libsdl1.2-dev
+pylint3
+xterm
+zstd
+libssl-dev
+libncurses5-dev
+flex
+bison
+libselinux1
+gnupg
+net-tools

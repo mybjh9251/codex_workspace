@@ -1,0 +1,15 @@
+bin/
+obj/
+artifacts/
+
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+UbuntuPackageBundle_*/
+**/Download/
+**/download-report.csv
+**/manifest.json
+**/checksums.sha256
+**/unresolved-dependencies.csv
